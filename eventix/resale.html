@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Eventix — Resale</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+  <nav class="eventix-navbar">
+    <div class="eventix-logo" onclick="location.href='index.html'">Eventix</div>
+    <div class="eventix-navlinks">
+      <span class="city-display">📍 Select City</span>
+      <a href="index.html">Home</a>
+      <a href="events.html">Events</a>
+      <a href="mytickets.html">My Tickets</a>
+      <a href="about.html">About</a>
+      <button class="eventix-btn connect-wallet">Connect Wallet</button>
+    </div>
+  </nav>
+
+  <div class="page">
+    <h2 class="section-title">Marketplace - Resale Tickets</h2>
+    <p style="color:#555">Buy tickets from other users. All transactions are secured by smart contracts.</p>
+
+    <div id="loadingMsg" style="text-align:center; padding:20px;">Loading marketplace...</div>
+    <div id="marketplaceList" class="event-cards"></div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    async function loadMarketplace() {
+      const loadingMsg = document.getElementById('loadingMsg');
+      const marketplaceList = document.getElementById('marketplaceList');
+      
+      try {
+        console.log('🏦 Loading marketplace listings...');
+        const response = await fetch('http://localhost:3001/marketplace');
+        const listings = await response.json();
+        
+        loadingMsg.style.display = 'none';
+        
+        if (listings.length === 0) {
+          marketplaceList.innerHTML = '<p style="text-align:center; color:#666; padding:40px;">No tickets listed for resale yet. Check back later!</p>';
+          return;
+        }
+        
+        console.log(`✅ Loaded ${listings.length} marketplace listings`);
+        
+        marketplaceList.innerHTML = listings.map(ticket => `
+          <div class="event-card" style="border: 2px solid #ff6b6b; position: relative;">
+            <div class="status-badge" style="position: absolute; top: 8px; right: 8px; background: #b76e79; color: #fff5e1; padding: 6px 12px; border-radius: 12px; font-size: 0.7rem;">
+              RESALE
+            </div>
+            <img src="concert2.jpg" alt="${ticket.name}">
+            <div class="event-card-content">
+              <div class="event-card-title">${ticket.name}</div>
+              <div class="event-card-type">${ticket.description}</div>
+              <div style="color: #4b0082; font-weight: 600; margin: 8px 0; font-family: 'Inter', sans-serif;">${ticket.eventDate}</div>
+              <div style="color: #b76e79; font-weight: 600; margin: 8px 0;">
+                <span class="price-text">${ticket.price} SOL</span>
+                ${ticket.price > ticket.originalPrice ? `<div class="mono" style="font-size:0.8rem; color:#6b4c7a; text-decoration: line-through;">Original: ${ticket.originalPrice} SOL</div>` : ''}
+              </div>
+              <div class="mono" style="font-size: 0.8rem; color: #6b4c7a; margin: 4px 0;">
+                Mint: ${ticket.mint.slice(0,8)}...${ticket.mint.slice(-4)}
+              </div>
+              <div style="font-size: 0.8rem; color: #888; margin: 4px 0;">
+                Owner: ${ticket.owner.slice(0,6)}...${ticket.owner.slice(-4)}
+              </div>
+              <button onclick="buyFromMarketplace('${ticket.mint}', '${ticket.name}', '${ticket.description}', '${ticket.eventDate}', ${ticket.price})">
+                Buy for ${ticket.price} SOL
+              </button>
+            </div>
+          </div>
+        `).join('');
+        
+      } catch (error) {
+        console.error('❌ Error loading marketplace:', error);
+        loadingMsg.innerHTML = 'Error loading marketplace. Make sure the backend server is running.';
+      }
+    }
+
+    async function buyFromMarketplace(mintAddress, name, description, eventDate, price) {
+      const wallet = localStorage.getItem('wallet');
+      if (!wallet) {
+        alert('Please connect your wallet first!');
+        openWalletModal();
+        return;
+      }
+      
+      const confirm = window.confirm(`Buy "${name}" for ${price} SOL?`);
+      if (!confirm) return;
+      
+      try {
+        console.log(`💳 Purchasing from marketplace: ${mintAddress}`);
+        
+        const response = await fetch('http://localhost:3001/buy-from-marketplace', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticketId: mintAddress,
+            buyerWallet: wallet
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          alert(`✅ Purchase successful! Ticket transferred to your wallet.`);
+          loadMarketplace(); // Refresh listings
+        } else {
+          alert(`❌ Purchase failed: ${result.error}`);
+        }
+        
+      } catch (error) {
+        console.error('❌ Purchase error:', error);
+        alert('Purchase failed. Please try again.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMarketplace();
+      
+      // Auto-refresh every 30 seconds
+      setInterval(loadMarketplace, 30000);
+    });
+  </script>
+  <!-- Wallet Modal -->
+<div id="walletModal" class="wallet-modal">
+  <div class="wallet-box">
+    <h2>Connect Wallet</h2>
+    <p>Select your wallet provider to continue</p>
+    <div class="wallet-options">
+      <button onclick="connectPhantom()" class="wallet-btn">
+        <img src="phantom.png" alt="Phantom"> Phantom (Solana)
+      </button>
+      <button onclick="connectMetaMask()" class="wallet-btn">
+        <img src="metamask.png" alt="MetaMask"> MetaMask (Ethereum)
+      </button>
+    </div>
+
+    <!-- Wallet Actions -->
+    <div id="walletActions" style="display:none; margin-top:20px;">
+      <h3>Wallet Connected ✅</h3>
+      <p id="walletAddress"></p>
+      <canvas id="walletQR" style="margin:10px auto;"></canvas>
+      <button class="wallet-btn" onclick="buySol()">💳 Buy SOL with Cash</button>
+      <button class="wallet-btn secondary" onclick="disconnectWallet()">🔌 Disconnect</button>
+    </div>
+
+    <button class="close-wallet" onclick="closeWalletModal()">Close</button>
+  </div>
+</div>
+
+<!-- QR Code Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="includes.js"></script>
+
+</body>
+</html>

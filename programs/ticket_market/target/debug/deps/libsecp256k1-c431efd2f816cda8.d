@@ -1,0 +1,11 @@
+/mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/deps/libsecp256k1-c431efd2f816cda8.d: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libsecp256k1-0.6.0/src/lib.rs /mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out/const.rs /mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out/const_gen.rs
+
+/mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/deps/liblibsecp256k1-c431efd2f816cda8.rlib: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libsecp256k1-0.6.0/src/lib.rs /mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out/const.rs /mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out/const_gen.rs
+
+/mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/deps/liblibsecp256k1-c431efd2f816cda8.rmeta: /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libsecp256k1-0.6.0/src/lib.rs /mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out/const.rs /mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out/const_gen.rs
+
+/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libsecp256k1-0.6.0/src/lib.rs:
+/mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out/const.rs:
+/mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out/const_gen.rs:
+
+# env-dep:OUT_DIR=/mnt/c/Users/user/Desktop/solana-ticket-proto-main/solana-ticket-proto-main/programs/ticket_market/target/debug/build/libsecp256k1-e1c82ec3f70b4bf3/out

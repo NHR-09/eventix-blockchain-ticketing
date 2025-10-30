@@ -1,0 +1,23 @@
+[toolchain]
+anchor_version = "0.31.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+ticket_market = "8Bf9K8UUcQ29v9CkSGiqtgyiyfi4jy3KtxDSoYmtAcMj"
+
+
+[registry]
+url = "https://api.devnet.solana.com"
+
+[provider]
+cluster = "devnet"
+wallet = "/home/user/.config/solana/id.json"
+
+[workspace]
+members = ["programs/*"]
+
+[scripts]
+test = "mocha -t 1000000 tests/"

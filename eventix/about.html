@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Eventix — About Us</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+  <!-- Navbar -->
+  <div id="navbar"></div>
+
+<div class="page">
+  <div class="about-hero">
+    <h1>About Eventix</h1>
+    <p>Revolutionizing event ticketing with blockchain technology, creating secure, transparent, and fraud-proof experiences for event enthusiasts worldwide.</p>
+  </div>
+  
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🎟️</span>
+      <h3>NFT Tickets</h3>
+      <p>Every ticket is a unique NFT on the Solana blockchain, ensuring authenticity and preventing counterfeiting.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔒</span>
+      <h3>Smart Contracts</h3>
+      <p>Automated smart contracts handle ticket sales, transfers, and resale rules with complete transparency.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💰</span>
+      <h3>Fair Resale</h3>
+      <p>Built-in price controls prevent scalping while allowing legitimate resale with maximum markup limits.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⚡</span>
+      <h3>Instant Transfers</h3>
+      <p>Lightning-fast transactions on Solana network with minimal fees and instant confirmations.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🌐</span>
+      <h3>IPFS Storage</h3>
+      <p>Ticket metadata stored on IPFS ensures permanent accessibility and decentralized hosting.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📱</span>
+      <h3>Wallet Integration</h3>
+      <p>Seamless integration with popular crypto wallets like Phantom and MetaMask for easy access.</p>
+    </div>
+  </div>
+  
+  <div class="contact-section">
+    <h2 class="section-title">Get in Touch</h2>
+    <p style="text-align: center; color: var(--text-light); font-size: 1.1rem; margin-bottom: 40px;">Have questions or want to list your event? We'd love to hear from you.</p>
+    
+    <div class="contact-grid">
+      <div class="contact-item">
+        <span class="contact-icon">📧</span>
+        <div class="contact-info">
+          <h4>Email Us</h4>
+          <p>support@eventix.com</p>
+        </div>
+      </div>
+      <div class="contact-item">
+        <span class="contact-icon">📞</span>
+        <div class="contact-info">
+          <h4>Call Us</h4>
+          <p>+91 98765 43210</p>
+        </div>
+      </div>
+      <div class="contact-item">
+        <span class="contact-icon">📍</span>
+        <div class="contact-info">
+          <h4>Visit Us</h4>
+          <p>Pune, India</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="includes.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const saved = localStorage.getItem("aboutContent");
+    document.getElementById("aboutText").innerText = saved || "Welcome to Eventix. We bring events to life...";
+  });
+</script>
+
+  <!-- Footer -->
+  <div id="footer"></div>
+
+  <script src="app.js"></script>
+  <script src="includes.js"></script>
+  <!-- Wallet Modal -->
+<div id="walletModal" class="wallet-modal">
+  <div class="wallet-box">
+    <h2>Connect Wallet</h2>
+    <p>Select your wallet provider to continue</p>
+    <div class="wallet-options">
+      <button onclick="connectPhantom()" class="wallet-btn">
+        <img src="phantom.png" alt="Phantom"> Phantom (Solana)
+      </button>
+      <button onclick="connectMetaMask()" class="wallet-btn">
+        <img src="metamask.png" alt="MetaMask"> MetaMask (Ethereum)
+      </button>
+    </div>
+
+    <!-- Wallet Actions -->
+    <div id="walletActions" style="display:none; margin-top:20px;">
+      <h3>Wallet Connected ✅</h3>
+      <p id="walletAddress"></p>
+      <canvas id="walletQR" style="margin:10px auto;"></canvas>
+      <button class="wallet-btn" onclick="buySol()">💳 Buy SOL with Cash</button>
+      <button class="wallet-btn secondary" onclick="disconnectWallet()">🔌 Disconnect</button>
+    </div>
+
+    <button class="close-wallet" onclick="closeWalletModal()">Close</button>
+  </div>
+</div>
+
+<!-- QR Code Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="includes.js"></script>
+
+</body>
+</html>

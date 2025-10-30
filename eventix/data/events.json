@@ -1,0 +1,54 @@
+{
+  "events": [
+    {
+      "id":"concert-vip",
+      "title":"VIP Concert Ticket",
+      "category":"Concert",
+      "date":"Dec 25, 2025",
+      "venue":"Indie Night Concert - VIP Access",
+      "price":"0.1 SOL",
+      "image":"concert2.jpg",
+      "description":"Exclusive VIP access to the hottest indie concert of the year"
+    },
+    {
+      "id":"music-fest",
+      "title":"Music Fest 2025",
+      "category":"Festival",
+      "date":"Jan 15, 2025",
+      "venue":"Annual Music Festival",
+      "price":"0.08 SOL",
+      "image":"festival.jpeg",
+      "description":"Three days of non-stop music from top artists"
+    },
+    {
+      "id":"standup-night",
+      "title":"Standup Night",
+      "category":"Comedy",
+      "date":"Feb 10, 2025",
+      "venue":"Comedy Show with Top Comedians",
+      "price":"0.05 SOL",
+      "image":"standup.jpeg",
+      "description":"Laugh out loud with the best comedians in town"
+    },
+    {
+      "id":"art-expo",
+      "title":"Art Expo",
+      "category":"Exhibition",
+      "date":"Mar 5, 2025",
+      "venue":"Modern Art Exhibition",
+      "price":"0.03 SOL",
+      "image":"art exhibition.jpg",
+      "description":"Discover contemporary art from emerging artists"
+    },
+    {
+      "id":"sports-mania",
+      "title":"Sports Mania",
+      "category":"Sports",
+      "date":"Apr 20, 2025",
+      "venue":"Multi-Sport Championship",
+      "price":"0.12 SOL",
+      "image":"sports2.png",
+      "description":"Ultimate sports championship with multiple events"
+    }
+  ]
+}

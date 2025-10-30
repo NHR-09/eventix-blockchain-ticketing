@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Eventix — My Tickets</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+  <div id="navbar"></div>
+
+  <div class="page">
+    <h2 class="section-title">My Tickets</h2>
+    <p style="color:#555">Your minted NFT tickets are shown here.</p>
+    <div id="loadingMsg" style="text-align:center; padding:20px;">Loading tickets...</div>
+    <div id="ticketList" class="ticket-list"></div>
+  </div>
+
+  <div id="footer"></div>
+
+  <script src="includes.js"></script>
+  <script>
+    async function loadMyTickets() {
+      const loadingMsg = document.getElementById('loadingMsg');
+      const ticketList = document.getElementById('ticketList');
+      
+      try {
+        console.log('🎫 Loading user tickets from backend...');
+        const response = await fetch('http://localhost:3001/my-tickets');
+        const tickets = await response.json();
+        
+        loadingMsg.style.display = 'none';
+        
+        if (tickets.length === 0) {
+          ticketList.innerHTML = '<p style="text-align:center; color:#666; padding:40px;">No tickets yet. <a href="events.html">Browse events</a> to purchase tickets!</p>';
+          return;
+        }
+        
+        console.log(`✅ Loaded ${tickets.length} tickets`);
+        
+        ticketList.innerHTML = tickets.map(ticket => `
+          <div class="ticket" style="opacity: 0; transform: translateX(-50px);">
+            <img src="concert2.jpg" alt="${ticket.name}">
+            <div class="ticket-info">
+              <h3>${ticket.name}</h3>
+              <div style="color: #6b4c7a; margin-bottom: 8px; font-family: 'Inter', sans-serif;">${ticket.description}</div>
+              <div style="color: #4b0082; font-weight: 600; margin-bottom: 8px; font-family: 'Inter', sans-serif;">${ticket.eventDate}</div>
+              <div class="mono" style="font-size: 0.9rem; color: #6b4c7a; margin-bottom: 8px;">Mint: ${ticket.mint.slice(0,8)}...${ticket.mint.slice(-4)}</div>
+              <span class="status-badge" style="background: ${ticket.isListed ? '#b76e79' : '#4b0082'}; color: #fff5e1; padding: 6px 14px; border-radius: 20px;">
+                ${ticket.isListed ? 'Listed for Sale' : 'Owned'}
+              </span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+              <div class="price-text" style="font-size: 1.3rem;">${ticket.price} SOL</div>
+              <canvas id="qr_${ticket.mint}" style="border: 2px solid #e2e8f0; border-radius: 8px;"></canvas>
+              <div style="display: flex; gap: 10px;">
+                <button class="eventix-btn" onclick="downloadTicket('${ticket.mint}')">Download</button>
+                ${!ticket.isListed ? `<button class="eventix-btn secondary" onclick="listForResale('${ticket.mint}', ${ticket.price})">List for Sale</button>` : '<button class="eventix-btn" disabled style="opacity: 0.6;">Listed</button>'}
+              </div>
+            </div>
+          </div>
+        `).join('');
+        
+        // Animate tickets
+        anime({
+          targets: '.ticket',
+          translateX: [-50, 0],
+          opacity: [0, 1],
+          duration: 600,
+          delay: anime.stagger(150),
+          easing: 'easeOutExpo'
+        });
+        
+        // Generate QR codes
+        tickets.forEach(ticket => {
+          new QRious({
+            element: document.getElementById('qr_' + ticket.mint),
+            value: `Ticket:${ticket.mint}|Event:${ticket.name}|Date:${ticket.eventDate}`,
+            size: 80
+          });
+        });
+        
+      } catch (error) {
+        console.error('❌ Error loading tickets:', error);
+        loadingMsg.innerHTML = 'Error loading tickets. Make sure the backend server is running.';
+      }
+    }
+    
+    function downloadTicket(mintAddress) {
+      console.log(`📎 Download ticket: ${mintAddress}`);
+      alert(`Download functionality for ticket ${mintAddress.slice(0,8)}... (not implemented in demo)`);
+    }
+    
+    async function listForResale(mintAddress, currentPrice) {
+      const newPrice = prompt(`Enter resale price in SOL (current: ${currentPrice}):`, currentPrice * 1.1);
+      if (!newPrice || newPrice <= 0) return;
+      
+      try {
+        console.log(`💰 Listing ticket ${mintAddress} for ${newPrice} SOL`);
+        
+        const response = await fetch('http://localhost:3001/list-ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticketId: mintAddress, price: parseFloat(newPrice) })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          alert(`✅ Ticket listed for sale at ${newPrice} SOL!`);
+          loadMyTickets(); // Reload tickets
+        } else {
+          alert(`❌ Failed to list ticket: ${result.error}`);
+        }
+      } catch (error) {
+        console.error('❌ Error listing ticket:', error);
+        alert('Error listing ticket. Please try again.');
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const wallet = localStorage.getItem('wallet');
+      if (!wallet) {
+        document.getElementById('loadingMsg').innerHTML = 'Please connect your wallet to view tickets.';
+        return;
+      }
+      loadMyTickets();
+    });
+  </script>
+
+  <!-- Wallet Modal -->
+  <div id="walletModal" class="wallet-modal">
+    <div class="wallet-box">
+      <h2>Connect Wallet</h2>
+      <p>Select your wallet provider to continue</p>
+      <div class="wallet-options">
+        <button onclick="connectPhantom()" class="wallet-btn">
+          <img src="phantom.png" alt="Phantom"> Phantom (Solana)
+        </button>
+        <button onclick="connectMetaMask()" class="wallet-btn">
+          <img src="metamask.png" alt="MetaMask"> MetaMask (Ethereum)
+        </button>
+      </div>
+
+      <!-- Wallet Actions -->
+      <div id="walletActions" style="display:none; margin-top:20px;">
+        <h3>Wallet Connected ✅</h3>
+        <p id="walletAddress"></p>
+        <canvas id="walletQR" style="margin:10px auto;"></canvas>
+        <button class="wallet-btn" onclick="buySol()">💳 Buy SOL with Cash</button>
+        <button class="wallet-btn secondary" onclick="disconnectWallet()">🔌 Disconnect</button>
+      </div>
+
+      <button class="close-wallet" onclick="closeWalletModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- QR Code Library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</body>
+</html>
