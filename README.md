@@ -4,19 +4,19 @@ A comprehensive event ticketing platform built with blockchain technology, featu
 
 ## 🏗️ Architecture Overview
 
-### Frontend (Port 8080)
+### Frontend 
 - **Technology**: HTML5, CSS3, JavaScript (ES6+)
 - **Animations**: Anime.js, GSAP ScrollTrigger, Three.js
 - **Features**: Responsive design, cinematic animations, wallet integration
 - **Location**: `/eventix/` directory
 
-### Backend API (Port 3001)
+### Backend API 
 - **Technology**: Node.js, Express.js
 - **Database**: MySQL with bcrypt authentication
 - **Features**: User management, event CRUD, ticket booking
 - **Location**: `/backend/` directory
 
-### Minting Service (Port 3002)
+### Minting Service 
 - **Technology**: Node.js, Solana Web3.js
 - **Blockchain**: Solana network integration
 - **Features**: NFT ticket minting, wallet operations
