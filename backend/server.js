@@ -49,8 +49,13 @@ const TICKET_TYPES = loadEvents();
 app.post('/buy-ticket', async (req, res) => {
   try {
     console.log('🎫 Processing ticket purchase request...');
-    const { ticketType } = req.body;
+    const { ticketType, walletAddress } = req.body;
     console.log(`   Ticket type requested: ${ticketType}`);
+    console.log(`   Buyer wallet: ${walletAddress}`);
+    
+    if (!walletAddress) {
+      return res.json({ success: false, error: 'Wallet address required' });
+    }
     
     const ticketInfo = TICKET_TYPES[ticketType];
     
@@ -78,12 +83,12 @@ app.post('/buy-ticket', async (req, res) => {
         originalPrice: ticketInfo.price,
         image: ticketInfo.image,
         isListed: false,
-        owner: 'customer',
+        owner: walletAddress,
         createdAt: new Date().toISOString()
       };
       
       userTickets.push(ticket);
-      console.log(`   ✅ Ticket stored! Total tickets: ${userTickets.length}`);
+      console.log(`   ✅ Ticket stored for ${walletAddress}! Total tickets: ${userTickets.length}`);
       
       res.json({
         success: true,
@@ -131,12 +136,21 @@ app.post('/list-ticket', async (req, res) => {
 
 // Get user's tickets
 app.get('/my-tickets', (req, res) => {
-  console.log('🎫 Loading user tickets...');
-  console.log(`   ✅ User has ${userTickets.length} tickets`);
-  userTickets.forEach((ticket, i) => {
+  const walletAddress = req.query.wallet || req.headers['wallet-address'];
+  
+  if (!walletAddress) {
+    return res.json({ error: 'Wallet address required' });
+  }
+  
+  console.log(`🎫 Loading tickets for wallet: ${walletAddress}`);
+  const userSpecificTickets = userTickets.filter(ticket => ticket.owner === walletAddress);
+  
+  console.log(`   ✅ User has ${userSpecificTickets.length} tickets`);
+  userSpecificTickets.forEach((ticket, i) => {
     console.log(`   ${i+1}. ${ticket.name} - ${ticket.mint.slice(0,8)}... - ${ticket.isListed ? 'Listed' : 'Not Listed'}`);
   });
-  res.json(userTickets);
+  
+  res.json(userSpecificTickets);
 });
 
 // Get available tickets
@@ -207,6 +221,32 @@ app.use((req, res, next) => {
   next();
 });
 
+// Transfer NFT function - calls minting service
+async function transferNFT(mintAddress, fromWallet, toWallet, price) {
+  try {
+    console.log(`🔄 Calling NFT transfer service: ${mintAddress} from ${fromWallet} to ${toWallet}`);
+    
+    const response = await fetch('http://localhost:3002/transfer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        mintAddress, 
+        fromWallet, 
+        toWallet, 
+        price 
+      })
+    });
+    
+    const result = await response.json();
+    console.log(`📝 Transfer service response:`, result);
+    
+    return result;
+  } catch (error) {
+    console.error(`❌ Transfer service error:`, error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 // Buy ticket from marketplace
 app.post('/buy-from-marketplace', async (req, res) => {
   try {
@@ -222,21 +262,27 @@ app.post('/buy-from-marketplace', async (req, res) => {
     }
     
     console.log(`   ✅ Found ticket: ${ticket.name} - ${ticket.price} SOL`);
+    console.log(`   🔄 Transferring NFT ownership...`);
     
-    // Simulate purchase transaction
-    const mockTransaction = 'BUY' + Date.now().toString(36).toUpperCase();
+    // Call NFT transfer service instead of minting new NFT
+    const transferResult = await transferNFT(ticketId, ticket.owner, buyerWallet, ticket.price);
     
-    // Transfer ownership
-    ticket.owner = buyerWallet;
-    ticket.isListed = false;
-    
-    console.log(`   ✅ Ownership transferred to: ${buyerWallet}`);
-    
-    res.json({
-      success: true,
-      transaction: mockTransaction,
-      ticket: ticket
-    });
+    if (transferResult.success) {
+      // Update ownership in backend
+      ticket.owner = buyerWallet;
+      ticket.isListed = false;
+      
+      console.log(`   ✅ NFT ownership transferred to: ${buyerWallet}`);
+      
+      res.json({
+        success: true,
+        transaction: transferResult.transaction,
+        ticket: ticket
+      });
+    } else {
+      console.log(`   ❌ NFT transfer failed: ${transferResult.error}`);
+      res.json({ success: false, error: transferResult.error });
+    }
   } catch (error) {
     console.error('❌ Marketplace buy error:', error.message);
     res.json({ success: false, error: error.message });

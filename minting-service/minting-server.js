@@ -200,12 +200,12 @@ async function createSmartContractTicket(connection, wallet, mintAddress, price)
   const instructionData = Buffer.alloc(8 + 8 + 1 + 1 + 32);
   let offset = 0;
   
-  // Instruction discriminator for create_ticket (from IDL)
+  // Instruction discriminator for create_ticket
   const discriminator = Buffer.from([16, 178, 122, 25, 213, 85, 96, 129]);
   discriminator.copy(instructionData, offset);
   offset += 8;
   
-  // Price (u64) - fix floating point precision
+  // Price (u64)
   const priceBuffer = Buffer.alloc(8);
   const priceInLamports = Math.floor(price * LAMPORTS_PER_SOL);
   priceBuffer.writeBigUInt64LE(BigInt(priceInLamports), 0);
@@ -213,10 +213,10 @@ async function createSmartContractTicket(connection, wallet, mintAddress, price)
   offset += 8;
   
   // Resale allowed (bool)
-  instructionData.writeUInt8(1, offset); // true
+  instructionData.writeUInt8(1, offset);
   offset += 1;
   
-  // Max markup (u8)
+  // Max markup (u8) - 25% max markup
   instructionData.writeUInt8(25, offset);
   offset += 1;
   
@@ -412,6 +412,8 @@ app.post('/list', async (req, res) => {
       res.json({ success: false, error: 'You are not the owner of this ticket.' });
     } else if (error.message.includes('ResaleNotAllowed')) {
       res.json({ success: false, error: 'This ticket cannot be resold.' });
+    } else if (error.message.includes('TicketAlreadySold')) {
+      res.json({ success: false, error: 'This ticket has already been sold once and cannot be resold again due to anti-scalping rules.' });
     } else {
       res.json({ success: false, error: error.message });
     }
@@ -455,10 +457,81 @@ app.get('/info/:mintAddress', async (req, res) => {
   }
 });
 
+app.post('/transfer', async (req, res) => {
+  try {
+    const { mintAddress, fromWallet, toWallet, price } = req.body;
+    console.log(`🔄 REAL SMART CONTRACT TRANSFER: ${mintAddress}`);
+    
+    const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
+    const connection = await createRobustConnection(RPC_URL);
+    
+    const mintPubkey = new PublicKey(mintAddress);
+    const fromPubkey = new PublicKey(fromWallet);
+    const toPubkey = new PublicKey(toWallet);
+    
+    // Get ticket PDA (created by organizer)
+    const [ticketPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('ticket'), solKeypair.publicKey.toBuffer(), mintPubkey.toBuffer()],
+      PROGRAM_ID
+    );
+    
+    console.log(`  📍 Ticket PDA: ${ticketPda.toBase58()}`);
+    
+    // Check ticket state for anti-scalping
+    const ticketAccount = await connection.getAccountInfo(ticketPda);
+    if (!ticketAccount) {
+      throw new Error('Ticket not found on blockchain');
+    }
+    
+    const ticketData = ticketAccount.data;
+    const hasBenSold = ticketData[32 + 8 + 1 + 1 + 8 + 1 + 32];
+    const saleCount = ticketData[32 + 8 + 1 + 1 + 8 + 1 + 32 + 1];
+    
+    console.log(`  📊 Anti-scalping check: has_been_sold=${hasBenSold}, sale_count=${saleCount}`);
+    
+    if (hasBenSold || saleCount > 0) {
+      throw new Error('TicketAlreadySold');
+    }
+    
+    // Execute buy_ticket instruction
+    const instructionData = Buffer.alloc(8);
+    const discriminator = Buffer.from([11, 24, 17, 193, 168, 116, 164, 169]);
+    discriminator.copy(instructionData, 0);
+    
+    const instruction = {
+      keys: [
+        { pubkey: ticketPda, isSigner: false, isWritable: true },
+        { pubkey: fromPubkey, isSigner: false, isWritable: true },
+        { pubkey: toPubkey, isSigner: false, isWritable: true },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
+      ],
+      programId: PROGRAM_ID,
+      data: instructionData
+    };
+    
+    const transaction = new anchor.web3.Transaction().add(instruction);
+    const signature = await connection.sendTransaction(transaction, [solKeypair]);
+    await connection.confirmTransaction(signature);
+    
+    console.log(`✅ REAL SMART CONTRACT TRANSFER: ${signature}`);
+    res.json({ success: true, transaction: signature });
+    
+  } catch (error) {
+    console.error('❌ SMART CONTRACT TRANSFER FAILED:', error.message);
+    
+    if (error.message.includes('TicketAlreadySold')) {
+      res.json({ success: false, error: 'This ticket has already been sold and cannot be resold again due to anti-scalping rules.' });
+    } else {
+      res.json({ success: false, error: error.message });
+    }
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🏭 Minting service running on http://localhost:${PORT}`);
   console.log('📋 Available endpoints:');
   console.log('  POST /mint - Mint new ticket');
   console.log('  POST /list - List ticket for sale');
+  console.log('  POST /transfer - Transfer NFT ownership');
   console.log('  GET /info/:mintAddress - Get ticket info');
 });

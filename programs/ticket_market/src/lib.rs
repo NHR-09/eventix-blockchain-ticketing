@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-// Fix the program ID to match your JSON
-declare_id!("8Bf9K8UUcQ29v9CkSGiqtgyiyfi4jy3KtxDSoYmtAcMj");
+// Use original working program ID
+declare_id!("Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw");
 
 #[program]
 pub mod ticket_market {
@@ -12,8 +12,8 @@ pub mod ticket_market {
         ctx: Context<CreateTicket>,
         price: u64,
         resale_allowed: bool,
-        max_markup: u8, // % max markup on resale (e.g., 20 = 20%)
-        mint: Pubkey,   // Add mint address parameter
+        max_markup: u8,
+        mint: Pubkey,
     ) -> Result<()> {
         let ticket = &mut ctx.accounts.ticket;
         ticket.owner = *ctx.accounts.organizer.key;
@@ -22,7 +22,9 @@ pub mod ticket_market {
         ticket.max_markup = max_markup;
         ticket.original_price = price;
         ticket.is_listed = false;
-        ticket.mint = mint; // Store the mint address
+        ticket.mint = mint;
+        ticket.has_been_sold = false;
+        ticket.sale_count = 0;
         Ok(())
     }
 
@@ -35,6 +37,10 @@ pub mod ticket_market {
             ticket.owner == *ctx.accounts.owner.key,
             TicketError::NotTicketOwner
         );
+        
+        // Anti-scalping: allow only one resale
+        require!(!ticket.has_been_sold, TicketError::TicketAlreadySold);
+        require!(ticket.sale_count == 0, TicketError::TicketAlreadySold);
 
         // Enforce max markup % limit
         let max_allowed_price =
@@ -68,8 +74,11 @@ pub mod ticket_market {
             .to_account_info()
             .try_borrow_mut_lamports()? += ticket.price;
 
+        // Transfer ownership and mark as sold
         ticket.owner = *ctx.accounts.buyer.key;
         ticket.is_listed = false;
+        ticket.has_been_sold = true;
+        ticket.sale_count += 1;
 
         Ok(())
     }
@@ -119,11 +128,13 @@ pub struct Ticket {
     pub max_markup: u8,       // 1
     pub original_price: u64,  // 8
     pub is_listed: bool,      // 1
-    pub mint: Pubkey,         // 32 - Add mint field
+    pub mint: Pubkey,         // 32
+    pub has_been_sold: bool,  // 1 - Track if ticket was ever sold
+    pub sale_count: u8,       // 1 - Count number of sales
 }
 
 impl Ticket {
-    pub const LEN: usize = 32 + 8 + 1 + 1 + 8 + 1 + 32; // Updated length
+    pub const LEN: usize = 32 + 8 + 1 + 1 + 8 + 1 + 32 + 1 + 1; // Length with anti-scalping fields
 }
 
 #[error_code]
@@ -136,4 +147,6 @@ pub enum TicketError {
     ExceedsMaxMarkup,
     #[msg("Ticket is not listed for sale.")]
     TicketNotListed,
+    #[msg("Ticket has already been sold and cannot be resold again.")]
+    TicketAlreadySold,
 }

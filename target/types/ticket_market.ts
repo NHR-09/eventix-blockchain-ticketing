@@ -181,6 +181,11 @@ export type TicketMarket = {
       "code": 6003,
       "name": "ticketNotListed",
       "msg": "Ticket is not listed for sale."
+    },
+    {
+      "code": 6004,
+      "name": "ticketAlreadySold",
+      "msg": "Ticket has already been sold and cannot be resold again."
     }
   ],
   "types": [

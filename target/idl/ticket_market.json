@@ -175,6 +175,11 @@
       "code": 6003,
       "name": "TicketNotListed",
       "msg": "Ticket is not listed for sale."
+    },
+    {
+      "code": 6004,
+      "name": "TicketAlreadySold",
+      "msg": "Ticket has already been sold and cannot be resold again."
     }
   ],
   "types": [

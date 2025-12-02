@@ -207,7 +207,8 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              ticketType: selectedTicket.ticketType
+              ticketType: selectedTicket.ticketType,
+              walletAddress: wallet
             })
           });
         }

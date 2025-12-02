@@ -25,10 +25,16 @@
     async function loadMyTickets() {
       const loadingMsg = document.getElementById('loadingMsg');
       const ticketList = document.getElementById('ticketList');
+      const wallet = localStorage.getItem('wallet');
+      
+      if (!wallet) {
+        loadingMsg.innerHTML = 'Please connect your wallet to view tickets.';
+        return;
+      }
       
       try {
         console.log('🎫 Loading user tickets from backend...');
-        const response = await fetch('http://localhost:3001/my-tickets');
+        const response = await fetch(`http://localhost:3001/my-tickets?wallet=${encodeURIComponent(wallet)}`);
         const tickets = await response.json();
         
         loadingMsg.style.display = 'none';
