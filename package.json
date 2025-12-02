@@ -4,6 +4,8 @@
   "type": "module",
   "description": "Solana-based event ticketing system with pNFTs",
   "scripts": {
+    "start": "node start-all.js",
+    "dev": "node start-all.js",
     "mint": "node mint_ticket.js",
     "test": "node marketplace-test.js test",
     "summary": "node marketplace-test.js summary",
