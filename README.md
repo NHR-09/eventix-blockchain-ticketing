@@ -220,27 +220,35 @@ CREATE TABLE tickets (
 );
 ```
 
-## ⛓️ Minting Service
+## ⛓️ Smart Contract & Minting Service
 
 ### Solana Integration
-- **Network**: Devnet/Mainnet support
+- **Network**: Devnet (Program ID: `Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw`)
 - **Wallet**: Phantom & MetaMask integration
-- **NFTs**: Metaplex standard compliance
-- **Storage**: IPFS metadata storage
+- **NFTs**: Real Metaplex NFTs with IPFS metadata
+- **Storage**: Pinata IPFS gateway
+- **Anti-Scalping**: Smart contract enforced resale limits
+
+### Smart Contract Features
+- **One-Time Resale**: Tickets can only be resold once
+- **Max Markup**: 25% maximum markup on original price
+- **Owner Verification**: Only ticket owner can list for resale
+- **Blockchain State**: `has_been_sold` and `sale_count` tracking
 
 ### Minting Endpoints
 ```javascript
-POST /api/mint/ticket      // Mint NFT ticket
-GET  /api/mint/status/:tx  // Check minting status
-POST /api/mint/transfer    // Transfer NFT
-GET  /api/mint/metadata/:mint // Get NFT metadata
+POST /mint                 // Mint real NFT + smart contract ticket
+POST /list                 // List ticket for resale (with smart contract validation)
+POST /transfer             // Transfer NFT ownership (real blockchain transaction)
+GET  /info/:mintAddress    // Get smart contract ticket info
 ```
 
 ### Key Features
-- Automatic NFT minting on ticket purchase
-- IPFS metadata storage for permanence
-- Solana program interaction
-- Wallet signature verification
+- **Real NFT minting** on Solana devnet
+- **Smart contract integration** for anti-scalping
+- **IPFS metadata storage** for permanence
+- **Blockchain state validation** before transfers
+- **Proper NFT ownership transfer** (not new minting)
 
 ## 🛠️ Development
 
@@ -307,6 +315,9 @@ CMD ["npm", "start"]
 - **CORS Configuration**: Controlled cross-origin requests
 - **Input Validation**: Server-side validation
 - **Wallet Security**: Signature verification
+- **Anti-Scalping**: Smart contract enforced resale limits
+- **Blockchain Validation**: Real-time smart contract state checks
+- **NFT Authenticity**: Immutable blockchain ownership records
 
 ## 🎯 Key Features
 
@@ -314,23 +325,26 @@ CMD ["npm", "start"]
 - ✅ Responsive design across all devices
 - ✅ Smooth animations and transitions
 - ✅ Intuitive navigation and UX
-- ✅ Real-time wallet integration
+- ✅ Real-time wallet integration (Phantom & MetaMask)
 - ✅ QR code ticket verification
+- ✅ Multi-wallet support with proper isolation
 
 ### Technical Features
 - ✅ MySQL database with proper relations
 - ✅ RESTful API architecture
-- ✅ Blockchain NFT integration
-- ✅ IPFS decentralized storage
+- ✅ **Real Solana NFT minting on devnet**
+- ✅ IPFS decentralized storage via Pinata
 - ✅ Modern JavaScript (ES6+)
 - ✅ Modular component architecture
+- ✅ **Smart contract anti-scalping enforcement**
 
 ### Business Features
 - ✅ Event management system
 - ✅ Ticket booking and transfers
 - ✅ User authentication and profiles
-- ✅ Fraud prevention via blockchain
-- ✅ Resale marketplace functionality
+- ✅ **Blockchain-enforced fraud prevention**
+- ✅ **Anti-scalping marketplace (one resale only)**
+- ✅ **Real NFT ownership transfer**
 
 ## 📞 Support
 
@@ -344,5 +358,23 @@ For issues and questions:
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
+
+## 🚀 Live Demo
+
+- **Repository**: https://github.com/NHR-09/eventix-blockchain-ticketing
+- **Smart Contract**: `Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw` (Solana Devnet)
+- **Network**: Solana Devnet
+- **IPFS**: Pinata Gateway
+
+## 🎫 Anti-Scalping Implementation
+
+The platform implements **real smart contract anti-scalping** rules:
+
+1. **Original Purchase**: Creates NFT + Smart Contract ticket with `has_been_sold = false`
+2. **First Resale**: User can list ticket, smart contract validates ownership and markup
+3. **Blockchain Transfer**: Real `buy_ticket` transaction updates `has_been_sold = true`
+4. **Second Resale Attempt**: Smart contract **blocks** with `TicketAlreadySold` error
+
+This ensures each ticket can only be resold **once**, preventing scalping while maintaining legitimate resale functionality.
 
 **Built with ❤️ for the future of event ticketing**
