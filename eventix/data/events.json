@@ -17,7 +17,7 @@
       "date":"Jan 15, 2025",
       "venue":"Annual Music Festival",
       "price":"0.08 SOL",
-      "image":"festival.jpeg",
+      "image":"concert1.jpeg",
       "description":"Three days of non-stop music from top artists"
     },
     {
@@ -47,8 +47,18 @@
       "date":"Apr 20, 2025",
       "venue":"Multi-Sport Championship",
       "price":"0.12 SOL",
-      "image":"sports2.png",
+      "image":"sportsbanner.jpg",
       "description":"Ultimate sports championship with multiple events"
+    },
+    {
+      "id":"f1-abu-dhabi",
+      "title":"F1 Abu Dhabi GP",
+      "category":"Formula 1",
+      "date":"Dec 8, 2025",
+      "venue":"Yas Marina Circuit, Abu Dhabi",
+      "price":"0.25 SOL",
+      "image":"f1.jpg",
+      "description":"Experience the thrill of Formula 1 at the season finale in Abu Dhabi"
     }
   ]
 }

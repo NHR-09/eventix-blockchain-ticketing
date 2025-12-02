@@ -59,7 +59,7 @@
         
         eventsList.innerHTML = events.map(event => `
           <div class="event-card" style="opacity: 0; transform: translateY(50px);">
-            <img src="concert2.jpg" alt="${event.name}">
+            <img src="${event.image || 'concert2.jpg'}" alt="${event.name}">
             <div class="event-card-content">
               <div class="event-card-title">${event.name}</div>
               <div class="event-card-type">${event.description}</div>
@@ -105,7 +105,7 @@
         
         marketplaceList.innerHTML = listings.map(ticket => `
           <div class="event-card" style="border: 2px solid #ff6b6b; opacity: 0; transform: translateY(30px);">
-            <img src="concert2.jpg" alt="${ticket.name}">
+            <img src="${ticket.image || 'concert2.jpg'}" alt="${ticket.name}">
             <div class="event-card-content">
               <div class="event-card-title">${ticket.name}</div>
               <div class="event-card-type">${ticket.description}</div>

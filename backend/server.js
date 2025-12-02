@@ -1,9 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 let PORT = 3001;
@@ -15,44 +18,32 @@ app.use(express.json());
 let tickets = [];
 let userTickets = [];
 
-// Available ticket types
-const TICKET_TYPES = {
-  'concert-vip': {
-    name: 'VIP Concert Ticket',
-    description: 'Indie Night Concert - VIP Access',
-    eventDate: 'Dec 25, 2025',
-    price: 0.1,
-    seat: 'VIP-001'
-  },
-  'music-fest': {
-    name: 'Music Fest 2025',
-    description: 'Annual Music Festival',
-    eventDate: 'Jan 15, 2025',
-    price: 0.08,
-    seat: 'GA-001'
-  },
-  'standup-night': {
-    name: 'Standup Night',
-    description: 'Comedy Show with Top Comedians',
-    eventDate: 'Feb 10, 2025',
-    price: 0.05,
-    seat: 'COM-001'
-  },
-  'art-expo': {
-    name: 'Art Expo',
-    description: 'Modern Art Exhibition',
-    eventDate: 'Mar 5, 2025',
-    price: 0.03,
-    seat: 'ART-001'
-  },
-  'sports-mania': {
-    name: 'Sports Mania',
-    description: 'Multi-Sport Championship',
-    eventDate: 'Apr 20, 2025',
-    price: 0.12,
-    seat: 'SPT-001'
+// Load events from JSON file
+function loadEvents() {
+  try {
+    const eventsPath = path.join(__dirname, '../eventix/data/events.json');
+    const eventsData = JSON.parse(fs.readFileSync(eventsPath, 'utf8'));
+    const TICKET_TYPES = {};
+    
+    eventsData.events.forEach(event => {
+      TICKET_TYPES[event.id] = {
+        name: event.title,
+        description: event.venue,
+        eventDate: event.date,
+        price: parseFloat(event.price.replace(' SOL', '')),
+        seat: 'GA-001',
+        image: event.image
+      };
+    });
+    
+    return TICKET_TYPES;
+  } catch (error) {
+    console.error('Error loading events:', error);
+    return {};
   }
-};
+}
+
+const TICKET_TYPES = loadEvents();
 
 // Buy ticket endpoint
 app.post('/buy-ticket', async (req, res) => {
@@ -85,6 +76,7 @@ app.post('/buy-ticket', async (req, res) => {
         eventDate: ticketInfo.eventDate,
         price: ticketInfo.price,
         originalPrice: ticketInfo.price,
+        image: ticketInfo.image,
         isListed: false,
         owner: 'customer',
         createdAt: new Date().toISOString()
@@ -149,7 +141,7 @@ app.get('/my-tickets', (req, res) => {
 
 // Get available tickets
 app.get('/available-tickets', (req, res) => {
-  console.log('🎫 Loading available tickets...');
+  console.log('🎫 Loading available tickets from events.json...');
   const available = Object.entries(TICKET_TYPES).map(([id, info]) => ({
     id,
     ...info
