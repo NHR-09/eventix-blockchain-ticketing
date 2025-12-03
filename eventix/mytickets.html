@@ -99,13 +99,23 @@
       const newPrice = prompt(`Enter resale price in SOL (current: ${currentPrice}):`, currentPrice * 1.1);
       if (!newPrice || newPrice <= 0) return;
       
+      const wallet = localStorage.getItem('wallet');
+      if (!wallet) {
+        alert('Please connect your wallet first!');
+        return;
+      }
+      
       try {
         console.log(`💰 Listing ticket ${mintAddress} for ${newPrice} SOL`);
         
         const response = await fetch('http://localhost:3001/list-ticket', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ticketId: mintAddress, price: parseFloat(newPrice) })
+          body: JSON.stringify({ 
+            ticketId: mintAddress, 
+            price: parseFloat(newPrice),
+            walletAddress: wallet
+          })
         });
         
         const result = await response.json();

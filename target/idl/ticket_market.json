@@ -1,5 +1,5 @@
 {
-  "address": "8Bf9K8UUcQ29v9CkSGiqtgyiyfi4jy3KtxDSoYmtAcMj",
+  "address": "Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw",
   "metadata": {
     "name": "ticket_market",
     "version": "0.1.0",
@@ -26,13 +26,29 @@
         },
         {
           "name": "owner",
+          "docs": [
+            "Seller (current owner)"
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "buyer",
+          "docs": [
+            "Buyer (will become owner)"
+          ],
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "organizer",
+          "docs": [
+            "Organizer account to receive royalty (must match ticket.organizer)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "marketplace"
         },
         {
           "name": "system_program",
@@ -107,6 +123,10 @@
         {
           "name": "mint",
           "type": "pubkey"
+        },
+        {
+          "name": "royalty_bps",
+          "type": "u16"
         }
       ]
     },
@@ -180,6 +200,26 @@
       "code": 6004,
       "name": "TicketAlreadySold",
       "msg": "Ticket has already been sold and cannot be resold again."
+    },
+    {
+      "code": 6005,
+      "name": "MaxResalesExceeded",
+      "msg": "Maximum number of resales (3) exceeded."
+    },
+    {
+      "code": 6006,
+      "name": "ExternalResaleBlocked",
+      "msg": "Ticket resale must occur through the marketplace."
+    },
+    {
+      "code": 6007,
+      "name": "InvalidOrganizerAccount",
+      "msg": "Provided organizer account does not match stored organizer."
+    },
+    {
+      "code": 6008,
+      "name": "MathError",
+      "msg": "Math error during price/royalty calculation."
     }
   ],
   "types": [
@@ -215,6 +255,22 @@
           {
             "name": "mint",
             "type": "pubkey"
+          },
+          {
+            "name": "has_been_sold",
+            "type": "bool"
+          },
+          {
+            "name": "sale_count",
+            "type": "u8"
+          },
+          {
+            "name": "organizer",
+            "type": "pubkey"
+          },
+          {
+            "name": "royalty_bps",
+            "type": "u16"
           }
         ]
       }

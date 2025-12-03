@@ -32,13 +32,29 @@ export type TicketMarket = {
         },
         {
           "name": "owner",
+          "docs": [
+            "Seller (current owner)"
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "buyer",
+          "docs": [
+            "Buyer (will become owner)"
+          ],
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "organizer",
+          "docs": [
+            "Organizer account to receive royalty (must match ticket.organizer)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "marketplace"
         },
         {
           "name": "systemProgram",
@@ -113,6 +129,10 @@ export type TicketMarket = {
         {
           "name": "mint",
           "type": "pubkey"
+        },
+        {
+          "name": "royaltyBps",
+          "type": "u16"
         }
       ]
     },
@@ -186,6 +206,26 @@ export type TicketMarket = {
       "code": 6004,
       "name": "ticketAlreadySold",
       "msg": "Ticket has already been sold and cannot be resold again."
+    },
+    {
+      "code": 6005,
+      "name": "maxResalesExceeded",
+      "msg": "Maximum number of resales (3) exceeded."
+    },
+    {
+      "code": 6006,
+      "name": "externalResaleBlocked",
+      "msg": "Ticket resale must occur through the marketplace."
+    },
+    {
+      "code": 6007,
+      "name": "invalidOrganizerAccount",
+      "msg": "Provided organizer account does not match stored organizer."
+    },
+    {
+      "code": 6008,
+      "name": "mathError",
+      "msg": "Math error during price/royalty calculation."
     }
   ],
   "types": [
@@ -221,6 +261,22 @@ export type TicketMarket = {
           {
             "name": "mint",
             "type": "pubkey"
+          },
+          {
+            "name": "hasBeenSold",
+            "type": "bool"
+          },
+          {
+            "name": "saleCount",
+            "type": "u8"
+          },
+          {
+            "name": "organizer",
+            "type": "pubkey"
+          },
+          {
+            "name": "royaltyBps",
+            "type": "u16"
           }
         ]
       }

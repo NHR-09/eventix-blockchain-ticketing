@@ -1,6 +1,7 @@
 {
   "name": "eventix",
   "version": "1.0.0",
+  "type": "module",
   "description": "Blockchain event ticketing platform",
   "main": "auth-server.js",
   "scripts": {

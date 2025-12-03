@@ -334,53 +334,69 @@
       const OWNER_EMAIL = "admin@eventix.com";
       const OWNER_PASS = "admin123";
 
-      document.getElementById("loginForm").addEventListener("submit", function(e){
+      document.getElementById("loginForm").addEventListener("submit", async function(e){
         e.preventDefault();
         const email = this.querySelector("input[type='email']").value.trim();
-        const pass = this.querySelector("input[type='password']").value.trim();
+        const password = this.querySelector("input[type='password']").value.trim();
 
-        if(email === OWNER_EMAIL && pass === OWNER_PASS){
+        if(email === OWNER_EMAIL && password === OWNER_PASS){
           localStorage.setItem("role","owner");
           alert("Welcome Owner!");
           location.href = "owner.html";
           return;
         }
 
-        let users = JSON.parse(localStorage.getItem("users") || "[]");
-        let user = users.find(u=> u.email === email && u.pass === pass);
-        if(user){
-          localStorage.setItem("role","user");
-          localStorage.setItem("currentUser", JSON.stringify(user));
-          alert("Login successful!");
-          location.href = "index.html";
-        } else {
-          alert("Invalid credentials!");
+        try {
+          const response = await fetch('http://localhost:3001/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await response.json();
+          
+          if (data.success) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('isLoggedIn', 'true');
+            alert('Login successful!');
+            location.href = 'index.html';
+          } else {
+            alert(data.error || 'Login failed');
+          }
+        } catch (error) {
+          alert('Login failed. Please try again.');
         }
       });
 
-      document.getElementById("signupForm").addEventListener("submit", function(e){
+      document.getElementById("signupForm").addEventListener("submit", async function(e){
         e.preventDefault();
         const name = this.querySelector("input[placeholder='Full Name']").value.trim();
         const email = this.querySelector("input[type='email']").value.trim();
-        const pass = this.querySelector("input[placeholder='Password']").value.trim();
+        const password = this.querySelector("input[placeholder='Password']").value.trim();
         const confirm = this.querySelector("input[placeholder='Confirm Password']").value.trim();
 
-        if(pass !== confirm){
+        if(password !== confirm){
           alert("Passwords do not match!");
           return;
         }
 
-        let users = JSON.parse(localStorage.getItem("users") || "[]");
-        if(users.find(u=> u.email === email)){
-          alert("User already exists!");
-          return;
+        try {
+          const response = await fetch('http://localhost:3001/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+          });
+          const data = await response.json();
+          
+          if (data.success) {
+            alert('Registration successful! Please login.');
+            switchTab('login');
+            this.reset();
+          } else {
+            alert(data.error || 'Registration failed');
+          }
+        } catch (error) {
+          alert('Registration failed. Please try again.');
         }
-
-        users.push({name,email,pass,role:"user"});
-        localStorage.setItem("users", JSON.stringify(users));
-        alert("Signup successful! Please login.");
-        switchTab("login");
-        this.reset();
       });
     </script>
   </body>

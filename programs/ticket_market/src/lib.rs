@@ -38,9 +38,8 @@ pub mod ticket_market {
             TicketError::NotTicketOwner
         );
         
-        // Anti-scalping: allow only one resale
-        require!(!ticket.has_been_sold, TicketError::TicketAlreadySold);
-        require!(ticket.sale_count == 0, TicketError::TicketAlreadySold);
+        // Anti-scalping: allow up to 3 resales
+        require!(ticket.sale_count < 3, TicketError::MaxResalesExceeded);
 
         // Enforce max markup % limit
         let max_allowed_price =
@@ -62,19 +61,11 @@ pub mod ticket_market {
 
         require!(ticket.is_listed, TicketError::TicketNotListed);
 
-        // Transfer lamports (simplified for Playground)
-        **ctx
-            .accounts
-            .buyer
-            .to_account_info()
-            .try_borrow_mut_lamports()? -= ticket.price;
-        **ctx
-            .accounts
-            .owner
-            .to_account_info()
-            .try_borrow_mut_lamports()? += ticket.price;
+        // Transfer lamports (simplified)
+        **ctx.accounts.buyer.to_account_info().try_borrow_mut_lamports()? -= ticket.price;
+        **ctx.accounts.owner.to_account_info().try_borrow_mut_lamports()? += ticket.price;
 
-        // Transfer ownership and mark as sold
+        // Transfer ownership and update anti-scalping counters
         ticket.owner = *ctx.accounts.buyer.key;
         ticket.is_listed = false;
         ticket.has_been_sold = true;
@@ -129,12 +120,12 @@ pub struct Ticket {
     pub original_price: u64,  // 8
     pub is_listed: bool,      // 1
     pub mint: Pubkey,         // 32
-    pub has_been_sold: bool,  // 1 - Track if ticket was ever sold
-    pub sale_count: u8,       // 1 - Count number of sales
+    pub has_been_sold: bool,  // 1
+    pub sale_count: u8,       // 1
 }
 
 impl Ticket {
-    pub const LEN: usize = 32 + 8 + 1 + 1 + 8 + 1 + 32 + 1 + 1; // Length with anti-scalping fields
+    pub const LEN: usize = 32 + 8 + 1 + 1 + 8 + 1 + 32 + 1 + 1; // 93 bytes
 }
 
 #[error_code]
@@ -149,4 +140,6 @@ pub enum TicketError {
     TicketNotListed,
     #[msg("Ticket has already been sold and cannot be resold again.")]
     TicketAlreadySold,
+    #[msg("Maximum number of resales (3) exceeded.")]
+    MaxResalesExceeded,
 }

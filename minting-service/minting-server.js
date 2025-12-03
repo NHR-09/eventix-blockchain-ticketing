@@ -60,7 +60,7 @@ const PROGRAM_ID = new PublicKey('Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw')
 const IDL = {
   version: '0.1.0',
   name: 'ticket_market',
-  programId: originalIDL.address,
+  programId: 'Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw',
   instructions: [
     {
       name: 'createTicket',
@@ -196,7 +196,7 @@ async function createSmartContractTicket(connection, wallet, mintAddress, price)
   
   console.log('  📍 Ticket PDA:', ticketPda.toBase58());
   
-  // Create instruction data for create_ticket
+  // Create instruction data for create_ticket (original format)
   const instructionData = Buffer.alloc(8 + 8 + 1 + 1 + 32);
   let offset = 0;
   
@@ -222,6 +222,8 @@ async function createSmartContractTicket(connection, wallet, mintAddress, price)
   
   // Mint address (32 bytes)
   mintPubkey.toBuffer().copy(instructionData, offset);
+  
+  console.log('  🔧 Creating ticket with existing program (93 bytes total)');
   
   const instruction = {
     keys: [
@@ -484,13 +486,15 @@ app.post('/transfer', async (req, res) => {
     }
     
     const ticketData = ticketAccount.data;
-    const hasBenSold = ticketData[32 + 8 + 1 + 1 + 8 + 1 + 32];
-    const saleCount = ticketData[32 + 8 + 1 + 1 + 8 + 1 + 32 + 1];
     
-    console.log(`  📊 Anti-scalping check: has_been_sold=${hasBenSold}, sale_count=${saleCount}`);
-    
-    if (hasBenSold || saleCount > 0) {
-      throw new Error('TicketAlreadySold');
+    // Parse anti-scalping fields
+    if (ticketData.length >= 93) {
+      let offset = 8 + 32 + 8 + 1 + 1 + 8 + 1 + 32;
+      const saleCount = ticketData[offset + 1];
+      
+      if (saleCount >= 3) {
+        throw new Error('MaxResalesExceeded');
+      }
     }
     
     // Execute buy_ticket instruction
@@ -501,26 +505,42 @@ app.post('/transfer', async (req, res) => {
     const instruction = {
       keys: [
         { pubkey: ticketPda, isSigner: false, isWritable: true },
-        { pubkey: fromPubkey, isSigner: false, isWritable: true },
-        { pubkey: toPubkey, isSigner: false, isWritable: true },
+        { pubkey: fromPubkey, isSigner: true, isWritable: true }, // owner must sign
+        { pubkey: toPubkey, isSigner: true, isWritable: true }, // buyer must sign
         { pubkey: SystemProgram.programId, isSigner: false, isWritable: false }
       ],
       programId: PROGRAM_ID,
       data: instructionData
     };
     
+    // Create transaction for frontend to sign
     const transaction = new anchor.web3.Transaction().add(instruction);
-    const signature = await connection.sendTransaction(transaction, [solKeypair]);
-    await connection.confirmTransaction(signature);
     
-    console.log(`✅ REAL SMART CONTRACT TRANSFER: ${signature}`);
-    res.json({ success: true, transaction: signature });
+    // Get recent blockhash
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = toPubkey; // buyer pays fees
+    
+    // Serialize transaction for frontend
+    const serializedTransaction = transaction.serialize({
+      requireAllSignatures: false,
+      verifySignatures: false
+    });
+    
+    res.json({ 
+      success: true, 
+      requiresSignature: true,
+      transaction: serializedTransaction.toString('base64'),
+      message: 'Transaction prepared for signing.'
+    });
     
   } catch (error) {
     console.error('❌ SMART CONTRACT TRANSFER FAILED:', error.message);
     
     if (error.message.includes('TicketAlreadySold')) {
       res.json({ success: false, error: 'This ticket has already been sold and cannot be resold again due to anti-scalping rules.' });
+    } else if (error.message.includes('MaxResalesExceeded')) {
+      res.json({ success: false, error: 'Maximum number of resales (3) exceeded. This ticket cannot be resold anymore.' });
     } else {
       res.json({ success: false, error: error.message });
     }

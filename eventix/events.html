@@ -6,6 +6,7 @@
   <title>Events - Eventix</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
 </head>
 <body>
   <div id="navbar"></div>
@@ -32,9 +33,24 @@
       <div style="margin: 20px 0;">
         <strong>Total: <span id="totalPrice"></span> SOL</strong>
       </div>
-      <div style="display: flex; gap: 10px; justify-content: center;">
-        <button class="eventix-btn" onclick="confirmPurchase()">Confirm Purchase</button>
+      <div id="purchaseButtons" style="display: flex; gap: 10px; justify-content: center;">
+        <button id="confirmBtn" class="eventix-btn" onclick="confirmPurchase()">Confirm Purchase</button>
         <button class="eventix-btn secondary" onclick="closePurchaseModal()">Cancel</button>
+      </div>
+      <div id="loadingSpinner" style="display: none; text-align: center; margin: 20px 0;">
+        <div class="loader-wrapper">
+          <span class="loader-letter">G</span>
+          <span class="loader-letter">e</span>
+          <span class="loader-letter">n</span>
+          <span class="loader-letter">e</span>
+          <span class="loader-letter">r</span>
+          <span class="loader-letter">a</span>
+          <span class="loader-letter">t</span>
+          <span class="loader-letter">i</span>
+          <span class="loader-letter">n</span>
+          <span class="loader-letter">g</span>
+          <div class="loader"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -180,12 +196,20 @@
     }
 
     function closePurchaseModal() {
+      if (isPurchasing) return; // Prevent closing during purchase
       document.getElementById('purchaseModal').style.display = 'none';
       selectedTicket = null;
+      hideLoadingState();
     }
 
+    let isPurchasing = false;
+
     async function confirmPurchase() {
-      if (!selectedTicket) return;
+      if (!selectedTicket || isPurchasing) return;
+      
+      // Prevent multiple clicks
+      isPurchasing = true;
+      showLoadingState();
       
       const wallet = localStorage.getItem('wallet');
       
@@ -216,11 +240,34 @@
         const result = await response.json();
         
         if (result.success) {
-          alert(`✅ Purchase successful! ${isMarketplacePurchase ? 'Ticket transferred to your wallet.' : 'Ticket minted: ' + result.mintAddress.slice(0,8) + '...'}`);
-          closePurchaseModal();
-          if (isMarketplacePurchase) {
-            loadMarketplace(); // Refresh marketplace
+          if (result.requiresSignature && isMarketplacePurchase) {
+            // Handle transaction signing for marketplace purchase
+            try {
+              const connection = new solanaWeb3.Connection('https://api.devnet.solana.com');
+              const transaction = solanaWeb3.Transaction.from(Buffer.from(result.transaction, 'base64'));
+              
+              // Get wallet adapter
+              if (window.solana && window.solana.isPhantom) {
+                const signedTransaction = await window.solana.signTransaction(transaction);
+                const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+                await connection.confirmTransaction(signature);
+                
+                alert(`✅ Marketplace purchase successful! Transaction: ${signature.slice(0,8)}...`);
+                loadMarketplace();
+              } else {
+                alert('❌ Phantom wallet not found. Please install Phantom wallet.');
+              }
+            } catch (signError) {
+              console.error('Transaction signing failed:', signError);
+              alert(`❌ Transaction signing failed: ${signError.message}`);
+            }
+          } else {
+            alert(`✅ Purchase successful! ${isMarketplacePurchase ? 'Ticket transferred to your wallet.' : 'Ticket minted: ' + result.mintAddress.slice(0,8) + '...'}`);
+            if (isMarketplacePurchase) {
+              loadMarketplace();
+            }
           }
+          closePurchaseModal();
         } else {
           alert(`❌ Purchase failed: ${result.error}`);
         }
@@ -228,7 +275,20 @@
       } catch (error) {
         console.error('❌ Purchase error:', error);
         alert('Purchase failed. Please try again.');
+      } finally {
+        isPurchasing = false;
+        hideLoadingState();
       }
+    }
+
+    function showLoadingState() {
+      document.getElementById('purchaseButtons').style.display = 'none';
+      document.getElementById('loadingSpinner').style.display = 'block';
+    }
+
+    function hideLoadingState() {
+      document.getElementById('purchaseButtons').style.display = 'flex';
+      document.getElementById('loadingSpinner').style.display = 'none';
     }
 
     document.addEventListener('DOMContentLoaded', () => {

@@ -3,7 +3,9 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
+import bcrypt from 'bcrypt';
 import { fileURLToPath } from 'url';
+import { initDatabase, createUser, findUserByEmail, createTicket, getUserTickets, updateTicketListing, updateTicketOwner, getMarketplaceTickets, addResaleHistory, getResaleCount } from './database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,9 +16,8 @@ let PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-// In-memory storage (use database in production)
-let tickets = [];
-let userTickets = [];
+// Initialize database
+await initDatabase();
 
 // Load events from JSON file
 function loadEvents() {
@@ -44,6 +45,55 @@ function loadEvents() {
 }
 
 const TICKET_TYPES = loadEvents();
+
+// Authentication endpoints
+app.post('/api/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return res.json({ success: false, error: 'User already exists' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await createUser(name, email, hashedPassword);
+    console.log(`✅ User registered: ${email}`);
+    
+    res.json({ success: true, message: 'User registered successfully' });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.json({ success: false, error: 'Registration failed' });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const user = await findUserByEmail(email);
+    if (!user) {
+      return res.json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    console.log(`✅ User logged in: ${email}`);
+    
+    const { password: _, ...userWithoutPassword } = user;
+    res.json({ 
+      success: true, 
+      user: userWithoutPassword,
+      message: 'Login successful'
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.json({ success: false, error: 'Login failed' });
+  }
+});
 
 // Buy ticket endpoint
 app.post('/buy-ticket', async (req, res) => {
@@ -87,8 +137,8 @@ app.post('/buy-ticket', async (req, res) => {
         createdAt: new Date().toISOString()
       };
       
-      userTickets.push(ticket);
-      console.log(`   ✅ Ticket stored for ${walletAddress}! Total tickets: ${userTickets.length}`);
+      await createTicket(ticket);
+      console.log(`   ✅ Ticket stored for ${walletAddress} in database!`);
       
       res.json({
         success: true,
@@ -109,20 +159,32 @@ app.post('/buy-ticket', async (req, res) => {
 // List ticket for sale
 app.post('/list-ticket', async (req, res) => {
   try {
-    const { ticketId, price } = req.body;
+    const { ticketId, price, walletAddress } = req.body;
     
     // Find ticket
+    const userTickets = await getUserTickets(walletAddress);
     const ticket = userTickets.find(t => t.mint === ticketId);
     if (!ticket) {
-      return res.json({ success: false, error: 'Ticket not found' });
+      return res.json({ success: false, error: 'Ticket not found or not owned by you' });
+    }
+
+    // Check resale count (max 3 resales)
+    const resaleCount = await getResaleCount(ticketId);
+    if (resaleCount >= 3) {
+      return res.json({ success: false, error: 'Maximum resales (3) exceeded' });
+    }
+
+    // Check markup limit (25%)
+    const maxPrice = ticket.originalPrice * 1.25;
+    if (price > maxPrice) {
+      return res.json({ success: false, error: `Price exceeds 25% markup limit. Max: ${maxPrice.toFixed(3)} SOL` });
     }
 
     // Call listing service
     const listResult = await listTicketForSale(ticketId, price);
     
     if (listResult.success) {
-      ticket.isListed = true;
-      ticket.price = price;
+      await updateTicketListing(ticketId, price, true);
       
       res.json({ success: true, transaction: listResult.transaction });
     } else {
@@ -135,7 +197,7 @@ app.post('/list-ticket', async (req, res) => {
 });
 
 // Get user's tickets
-app.get('/my-tickets', (req, res) => {
+app.get('/my-tickets', async (req, res) => {
   const walletAddress = req.query.wallet || req.headers['wallet-address'];
   
   if (!walletAddress) {
@@ -143,7 +205,7 @@ app.get('/my-tickets', (req, res) => {
   }
   
   console.log(`🎫 Loading tickets for wallet: ${walletAddress}`);
-  const userSpecificTickets = userTickets.filter(ticket => ticket.owner === walletAddress);
+  const userSpecificTickets = await getUserTickets(walletAddress);
   
   console.log(`   ✅ User has ${userSpecificTickets.length} tickets`);
   userSpecificTickets.forEach((ticket, i) => {
@@ -255,7 +317,8 @@ app.post('/buy-from-marketplace', async (req, res) => {
     console.log(`   Ticket: ${ticketId}, Buyer: ${buyerWallet}`);
     
     // Find the listed ticket
-    const ticket = userTickets.find(t => t.mint === ticketId && t.isListed);
+    const marketplaceTickets = await getMarketplaceTickets();
+    const ticket = marketplaceTickets.find(t => t.mint === ticketId);
     if (!ticket) {
       console.log(`   ❌ Ticket not found or not listed: ${ticketId}`);
       return res.json({ success: false, error: 'Ticket not available' });
@@ -264,15 +327,25 @@ app.post('/buy-from-marketplace', async (req, res) => {
     console.log(`   ✅ Found ticket: ${ticket.name} - ${ticket.price} SOL`);
     console.log(`   🔄 Transferring NFT ownership...`);
     
-    // Call NFT transfer service instead of minting new NFT
+    // Call NFT transfer service
     const transferResult = await transferNFT(ticketId, ticket.owner, buyerWallet, ticket.price);
     
     if (transferResult.success) {
+      // Record resale history
+      const resaleCount = await getResaleCount(ticketId);
+      await addResaleHistory({
+        ticketId,
+        fromWallet: ticket.owner,
+        toWallet: buyerWallet,
+        price: ticket.price,
+        resaleNumber: resaleCount + 1
+      });
+      
       // Update ownership in backend
-      ticket.owner = buyerWallet;
-      ticket.isListed = false;
+      await updateTicketOwner(ticketId, buyerWallet);
       
       console.log(`   ✅ NFT ownership transferred to: ${buyerWallet}`);
+      console.log(`   📊 Resale #${resaleCount + 1} recorded`);
       
       res.json({
         success: true,
@@ -290,19 +363,26 @@ app.post('/buy-from-marketplace', async (req, res) => {
 });
 
 // Get marketplace listings
-app.get('/marketplace', (req, res) => {
+app.get('/marketplace', async (req, res) => {
   console.log('🏪 Loading marketplace listings...');
-  const listedTickets = userTickets.filter(t => t.isListed);
-  console.log(`   ✅ Found ${listedTickets.length} listed tickets`);
-  listedTickets.forEach((ticket, i) => {
-    console.log(`   ${i+1}. ${ticket.name} - ${ticket.price} SOL - ${ticket.mint.slice(0,8)}...`);
-  });
-  res.json(listedTickets);
+  const listedTickets = await getMarketplaceTickets();
+  const ticketsWithResaleInfo = await Promise.all(listedTickets.map(async ticket => {
+    const resaleCount = await getResaleCount(ticket.mint);
+    return {
+      ...ticket,
+      resaleCount,
+      canResale: resaleCount < 3
+    };
+  }));
+  console.log(`   ✅ Found ${ticketsWithResaleInfo.length} listed tickets`);
+  res.json(ticketsWithResaleInfo);
 });
 
 const server = app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
   console.log('📋 Available endpoints:');
+  console.log('  POST /api/register - User registration');
+  console.log('  POST /api/login - User login');
   console.log('  POST /buy-ticket - Purchase a ticket');
   console.log('  POST /list-ticket - List ticket for sale');
   console.log('  POST /buy-from-marketplace - Buy from marketplace');

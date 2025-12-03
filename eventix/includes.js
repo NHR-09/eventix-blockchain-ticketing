@@ -20,7 +20,8 @@ function loadNavbar() {
       <a href="owner.html" class="${currentPage==='owner.html'?'active':''}">Dashboard</a>
       <button onclick="logoutUser()" class="eventix-btn secondary">Logout</button>
     `;
-  } else {
+  } else if (localStorage.getItem("isLoggedIn") === "true") {
+    const userData = JSON.parse(localStorage.getItem("user") || '{}');
     navbarHTML += `
       <a href="index.html" class="${currentPage==='index.html'?'active':''}">Home</a>
       <a href="events.html" class="${currentPage==='events.html'?'active':''}">Events</a>
@@ -28,6 +29,17 @@ function loadNavbar() {
       <a href="resale.html" class="${currentPage==='resale.html'?'active':''}">Resale</a>
       <a href="about.html" class="${currentPage==='about.html'?'active':''}">About</a>
       <button class="eventix-btn connect-wallet" onclick="openWalletModal()">${wallet ? 'Wallet: ' + wallet.slice(0,6) + '...' + wallet.slice(-4) : 'Connect Wallet'}</button>
+      <div class="user-section" style="display: flex; align-items: center; gap: 10px; padding: 8px 16px; background: rgba(108, 71, 255, 0.1); border-radius: 20px; margin: 0 10px;">
+        <span style="color: #6c47ff; font-weight: 600;">👤 ${userData.name || 'User'}</span>
+      </div>
+      <button onclick="logoutUser()" class="eventix-btn secondary">Logout</button>
+    `;
+  } else {
+    navbarHTML += `
+      <a href="index.html" class="${currentPage==='index.html'?'active':''}">Home</a>
+      <a href="events.html" class="${currentPage==='events.html'?'active':''}">Events</a>
+      <a href="about.html" class="${currentPage==='about.html'?'active':''}">About</a>
+      <a href="getstarted.html" class="eventix-btn">Get Started</a>
     `;
   }
 
