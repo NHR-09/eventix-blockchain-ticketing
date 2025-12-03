@@ -1,4 +1,8 @@
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+// Load environment variables from root .env file
+dotenv.config({ path: '../.env' });
 
 let db = null;
 let useMemory = false;
@@ -17,9 +21,9 @@ export async function initDatabase() {
     console.log('   Connecting to MySQL server...');
     const tempDb = await Promise.race([
       mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: '@Nihar091',
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '@Nihar091',
         connectTimeout: 5000
       }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 5000))
@@ -31,10 +35,10 @@ export async function initDatabase() {
     
     console.log('   Connecting to eventix_db...');
     db = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '@Nihar091',
-      database: 'eventix_db',
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '@Nihar091',
+      database: process.env.DB_NAME || 'eventix_db',
       connectTimeout: 5000
     });
     

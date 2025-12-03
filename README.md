@@ -4,377 +4,397 @@ A comprehensive event ticketing platform built with blockchain technology, featu
 
 ## 🏗️ Architecture Overview
 
-### Frontend 
-- **Technology**: HTML5, CSS3, JavaScript (ES6+)
-- **Animations**: Anime.js, GSAP ScrollTrigger, Three.js
-- **Features**: Responsive design, cinematic animations, wallet integration
-- **Location**: `/eventix/` directory
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        EVENTIX ARCHITECTURE                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
+│  │   Frontend  │    │   Backend   │    │   Minting   │         │
+│  │   (HTML/JS) │◄──►│  (Node.js)  │◄──►│   Service   │         │
+│  │             │    │             │    │  (Solana)   │         │
+│  └─────────────┘    └─────────────┘    └─────────────┘         │
+│         │                   │                   │               │
+│         │                   │                   │               │
+│         ▼                   ▼                   ▼               │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
+│  │   Browser   │    │   MySQL     │    │   Solana    │         │
+│  │   Storage   │    │  Database   │    │  Blockchain │         │
+│  └─────────────┘    └─────────────┘    └─────────────┘         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### Backend API 
-- **Technology**: Node.js, Express.js
-- **Database**: MySQL with bcrypt authentication
-- **Features**: User management, event CRUD, ticket booking
-- **Location**: `/backend/` directory
+## 🔄 Workflow Diagram
 
-### Minting Service 
-- **Technology**: Node.js, Solana Web3.js
-- **Blockchain**: Solana network integration
-- **Features**: NFT ticket minting, wallet operations
-- **Location**: `/minting-service/` directory
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        USER WORKFLOW                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  User Registration/Login                                        │
+│         │                                                       │
+│         ▼                                                       │
+│  Connect Wallet (Phantom/MetaMask)                             │
+│         │                                                       │
+│         ▼                                                       │
+│  Browse Events ──────────────────┐                             │
+│         │                        │                             │
+│         ▼                        ▼                             │
+│  Select Event              View Marketplace                     │
+│         │                        │                             │
+│         ▼                        ▼                             │
+│  Purchase Ticket           Buy Resale Ticket                   │
+│         │                        │                             │
+│         ▼                        ▼                             │
+│  ┌─────────────────────────────────────────┐                   │
+│  │        NFT MINTING PROCESS              │                   │
+│  │  1. Validate Payment                    │                   │
+│  │  2. Create Metadata (IPFS)              │                   │
+│  │  3. Mint NFT on Solana                  │                   │
+│  │  4. Store in Database                   │                   │
+│  │  5. Generate QR Code                    │                   │
+│  └─────────────────────────────────────────┘                   │
+│                        │                                       │
+│                        ▼                                       │
+│                 Ticket in Wallet                               │
+│                        │                                       │
+│                        ▼                                       │
+│              ┌─────────────────────┐                           │
+│              │   RESALE PROCESS    │                           │
+│              │  1. List for Sale   │                           │
+│              │  2. Smart Contract  │                           │
+│              │     Validation      │                           │
+│              │  3. Transfer NFT    │                           │
+│              │  4. Update Database │                           │
+│              └─────────────────────┘                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-## 🚀 Quick Start Guide
+## 📁 Project Structure & File Organization
 
-### Prerequisites
+### 🌐 Frontend Files (eventix/)
+```
+eventix/
+├── assets/                     # Media Assets
+│   ├── images/                 # Event & UI Images
+│   │   ├── concert1.jpg        # Event carousel images
+│   │   ├── concert2.jpg
+│   │   ├── standup.jpg
+│   │   ├── art exhibition.jpg
+│   │   ├── sportsbanner.jpg
+│   │   ├── phantom.png         # Wallet icons
+│   │   └── metamask.png
+│   ├── icons/                  # Social Media Icons
+│   │   ├── facebook-svgrepo-com.svg
+│   │   ├── instagram-svgrepo-com.svg
+│   │   └── twitter-svgrepo-com.svg
+│   └── videos/                 # Background Videos
+│       └── 1692701-uhd_3840_2160_30fps.mp4
+├── data/
+│   └── events.json             # Event data configuration
+├── index.html                  # Homepage with hero section
+├── events.html                 # Events listing & marketplace
+├── mytickets.html              # User ticket management
+├── getstarted.html             # Authentication page
+├── about.html                  # About page with animations
+├── style.css                   # Main stylesheet
+├── cinematic-style.css         # Animation styles
+├── includes.js                 # Shared components (navbar/footer)
+├── auth.js                     # Authentication logic
+├── cinematic-animations.js     # Three.js animations
+└── server.js                   # Frontend development server
+```
+
+### 🔧 Backend Files (backend/)
+```
+backend/
+├── routes/                     # API Route Handlers
+│   ├── auth.js                 # Authentication endpoints
+│   ├── events.js               # Event management
+│   └── tickets.js              # Ticket operations
+├── middleware/                 # Custom Middleware
+│   └── auth.js                 # JWT authentication
+├── server.js                   # Main Express server
+├── database.js                 # MySQL connection & queries
+└── package.json                # Backend dependencies
+```
+
+### ⛓️ Blockchain Files (minting-service/)
+```
+minting-service/
+├── minting-server.js           # Solana NFT minting service
+├── solana-config.js            # Blockchain configuration
+├── nft-metadata.js             # IPFS metadata handling
+└── package.json                # Minting service dependencies
+```
+
+### 🔐 Smart Contract Files (programs/)
+```
+programs/
+└── ticket_market/
+    └── src/
+        └── lib.rs              # Solana smart contract (Rust)
+```
+
+### 🛠️ Configuration Files (Root)
+```
+├── .env                        # Environment variables
+├── package.json                # Root dependencies
+├── start-all.js                # Service orchestrator
+├── Cargo.toml                  # Rust project configuration
+└── Anchor.toml                 # Solana program configuration
+```
+
+## 📋 File Categories & Connections
+
+### 🌐 Frontend Category
+**Core Pages:**
+- `index.html` → Main landing page with hero video and event carousel
+- `events.html` → Event listing and marketplace functionality
+- `mytickets.html` → User ticket management with QR codes
+- `getstarted.html` → Authentication with Google OAuth integration
+
+**Styling & Assets:**
+- `style.css` → Main styling for all pages
+- `cinematic-style.css` → Advanced animations and effects
+- `assets/` → Organized media files (images, icons, videos)
+
+**JavaScript Logic:**
+- `includes.js` → Shared navbar/footer components and wallet integration
+- `auth.js` → User authentication and session management
+- `cinematic-animations.js` → Three.js particle effects and animations
+
+**Data Configuration:**
+- `data/events.json` → Event information loaded by frontend and backend
+
+### 🔧 Backend Category
+**Main Server:**
+- `server.js` → Express.js server with API endpoints and middleware
+
+**Database Layer:**
+- `database.js` → MySQL connection, table creation, and CRUD operations
+
+**API Routes:**
+- `routes/auth.js` → User registration, login, Google OAuth
+- `routes/events.js` → Event CRUD operations
+- `routes/tickets.js` → Ticket booking, listing, transfers
+
+**Middleware:**
+- `middleware/auth.js` → JWT token validation and user authentication
+
+### ⛓️ Blockchain Category
+**Minting Service:**
+- `minting-server.js` → NFT creation, metadata upload, Solana transactions
+- `solana-config.js` → Wallet configuration and network settings
+- `nft-metadata.js` → IPFS integration for decentralized storage
+
+**Smart Contract:**
+- `programs/ticket_market/src/lib.rs` → Solana program for anti-scalping logic
+
+**Configuration:**
+- `.env` → Solana network, IPFS, and database credentials
+- `Cargo.toml` → Rust dependencies for smart contract
+- `Anchor.toml` → Solana program deployment configuration
+
+## 🔗 File Interconnections
+
+### Frontend ↔ Backend Communication
+```
+Frontend (JavaScript) ──HTTP API──► Backend (Express.js)
+     │                                      │
+     │                                      ▼
+     │                              MySQL Database
+     │                                      │
+     └──────────────────────────────────────┘
+```
+
+### Backend ↔ Blockchain Communication
+```
+Backend (Node.js) ──HTTP API──► Minting Service (Node.js)
+                                        │
+                                        ▼
+                                Solana Blockchain
+                                        │
+                                        ▼
+                                 IPFS Storage
+```
+
+### Data Flow Example (Ticket Purchase):
+1. **Frontend** (`events.html`) → User clicks "Buy Ticket"
+2. **Frontend** (`includes.js`) → Validates wallet connection
+3. **Frontend** → Sends POST request to `/buy-ticket`
+4. **Backend** (`server.js`) → Receives request, validates data
+5. **Backend** (`database.js`) → Checks user and event in MySQL
+6. **Backend** → Calls minting service via HTTP
+7. **Minting Service** (`minting-server.js`) → Creates NFT metadata
+8. **Minting Service** (`solana-config.js`) → Mints NFT on Solana
+9. **Minting Service** → Returns mint address to backend
+10. **Backend** (`database.js`) → Stores ticket in MySQL
+11. **Backend** → Returns success response to frontend
+12. **Frontend** (`mytickets.html`) → Displays new ticket with QR code
+
+## 🚀 Methodology
+
+### 1. **Blockchain-First Architecture**
+- Real NFT minting on Solana devnet
+- Smart contract anti-scalping enforcement
+- IPFS decentralized metadata storage
+- Wallet-based authentication
+
+### 2. **Full-Stack Integration**
+- Express.js REST API backend
+- MySQL database for persistent storage
+- Modern frontend with animations
+- Real-time wallet connectivity
+
+### 3. **Security Implementation**
+- JWT-based authentication
+- bcrypt password hashing
+- Smart contract resale limits
+- Input validation and sanitization
+
+### 4. **User Experience Focus**
+- Responsive design across devices
+- Smooth animations and transitions
+- Premium loading states
+- Multi-wallet support (Phantom & MetaMask)
+
+### 5. **Anti-Scalping Features**
+- Maximum 25% markup on resales
+- Limited to 3 resales per ticket
+- Smart contract enforcement
+- Blockchain state validation
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **HTML5/CSS3** - Modern web standards
+- **JavaScript ES6+** - Client-side logic
+- **Anime.js** - Smooth animations
+- **Three.js** - 3D particle effects
+- **GSAP ScrollTrigger** - Scroll animations
+
+### Backend
+- **Node.js** - Server runtime
+- **Express.js** - Web framework
+- **MySQL** - Relational database
+- **bcrypt** - Password hashing
+- **JWT** - Token authentication
+
+### Blockchain
+- **Solana** - High-performance blockchain
+- **Anchor Framework** - Solana development
+- **Rust** - Smart contract language
+- **IPFS/Pinata** - Decentralized storage
+- **Metaplex** - NFT standard
+
+### Development Tools
+- **Git** - Version control
+- **npm** - Package management
+- **Anchor CLI** - Solana deployment
+- **Phantom/MetaMask** - Wallet integration
+
+## 🔐 Environment Configuration
+
+### Required Environment Variables (.env)
+```env
+# Solana Configuration
+KEYPAIR_PATH=../utils/demo-keypair.json
+CLUSTER=devnet
+RPC_URL=https://api.devnet.solana.com
+
+# IPFS Configuration
+PINATA_GATEWAY=tan-tired-aphid-453.mypinata.cloud
+PINATA_JWT=your_pinata_jwt_token
+
+# Database Configuration
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_NAME=eventix_db
+
+# Authentication
+JWT_SECRET=your_jwt_secret
+PORT=3001
+
+# Smart Contract
+dummykey=Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw
+```
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
 ```bash
 # Install Node.js (v16+)
 # Install MySQL Server
-# Install Git
+# Install Rust and Solana CLI
+# Install Anchor Framework
 ```
 
-### 1. Clone Repository
+### 2. Installation
 ```bash
 git clone <repository-url>
 cd solana-ticket-proto-main
-```
-
-### 2. Database Setup
-```sql
--- Create MySQL database
-CREATE DATABASE eventix_db;
-USE eventix_db;
-
--- Tables will be created automatically on first run
-```
-
-### 3. Install Dependencies
-```bash
-# Install all dependencies
 npm install
-
-# Install frontend dependencies
 cd eventix && npm install && cd ..
-
-# Install backend dependencies  
 cd backend && npm install && cd ..
-
-# Install minting service dependencies
 cd minting-service && npm install && cd ..
 ```
 
-### 4. Environment Configuration
-Create `.env` files in each service directory:
-
-**Backend (.env)**
-```env
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_mysql_passworD
-DB_NAME=eventix_db
-JWT_SECRET=your_jwt_secret
-PORT=3001
+### 3. Database Setup
+```sql
+CREATE DATABASE eventix_db;
+-- Tables created automatically on first run
 ```
 
-**Minting Service (.env)**
-```env
-SOLANA_NETWORK=devnet
-PRIVATE_KEY=your_solana_private_key
-PORT=3002
-```
-
-### 5. Start All Services
+### 4. Start Services
 ```bash
-# Option 1: Start all services at once
 npm run start-all
-
-# Option 2: Start services individually
-npm run start:minting    # Port 3002
-npm run start:backend    # Port 3001  
-npm run start:frontend   # Port 8080
+# Or individually:
+# npm run start:minting    # Port 3002
+# npm run start:backend    # Port 3001
+# npm run start:frontend   # Port 8080
 ```
 
-### 6. Access Application
+### 5. Access Application
 - **Frontend**: http://localhost:8080
 - **Backend API**: http://localhost:3001
 - **Minting Service**: http://localhost:3002
 
-## 📁 Project Structure
+## 📊 Key Features
 
-```
-solana-ticket-proto-main/
-├── eventix/                    # Frontend Application
-│   ├── index.html             # Home page
-│   ├── about.html             # About page with animations
-│   ├── events.html            # Events listing
-│   ├── login.html             # User authentication
-│   ├── register.html          # User registration
-│   ├── mytickets.html         # User tickets
-│   ├── style.css              # Main styles
-│   ├── cinematic-style.css    # Animation styles
-│   ├── includes.js            # Navbar/footer components
-│   ├── auth.js                # Authentication logic
-│   ├── cinematic-animations.js # Three.js animations
-│   └── server.js              # Frontend server
-├── backend/                   # Backend API Server
-│   ├── server.js              # Main server file
-│   ├── database.js            # MySQL connection
-│   ├── routes/                # API routes
-│   │   ├── auth.js           # Authentication routes
-│   │   ├── events.js         # Event management
-│   │   └── tickets.js        # Ticket operations
-│   └── middleware/            # Custom middleware
-├── minting-service/           # Blockchain Service
-│   ├── minting-server.js      # Solana minting server
-│   ├── solana-config.js       # Blockchain configuration
-│   └── nft-metadata.js        # NFT metadata handling
-├── start-all.js               # Service orchestrator
-└── package.json               # Root dependencies
-```
+### ✅ Implemented Features
+- Real Solana NFT minting on devnet
+- Smart contract anti-scalping enforcement
+- Google OAuth authentication
+- Multi-wallet support (Phantom & MetaMask)
+- MySQL database integration
+- Premium UI with animations
+- QR code ticket verification
+- Marketplace resale functionality
+- IPFS decentralized storage
 
-## 🎨 Frontend Features
+### 🔒 Security Features
+- JWT token authentication
+- bcrypt password hashing
+- Smart contract resale limits
+- Input validation and sanitization
+- CORS protection
+- SQL injection prevention
 
-### Pages & Components
-- **Home**: Hero section with video background, event carousel
-- **About**: Cinematic animations with Three.js particle system
-- **Events**: Dynamic event listing with filtering
-- **Authentication**: Login/register with form validation
-- **My Tickets**: User ticket management with QR codes
-- **Wallet Integration**: Phantom & MetaMask support
+## 📞 Support & Documentation
 
-### Animation System
-- **Three.js**: 3D particle background with concert lighting
-- **GSAP ScrollTrigger**: Scroll-based animations
-- **Anime.js**: Smooth element transitions and counters
-- **Responsive**: Mobile-first design with breakpoints
-
-### Key Files
-- `cinematic-animations.js`: Main animation controller
-- `includes.js`: Shared navbar/footer components
-- `auth.js`: User authentication handling
-- `style.css`: Core styling and responsive design
-
-## 🔧 Backend API
-
-### Authentication Endpoints
-```javascript
-POST /api/register          // User registration
-POST /api/login            // User login
-PUT  /api/user/:id         // Update user profile
-POST /api/logout           // User logout
-```
-
-### Event Management
-```javascript
-GET    /api/events         // List all events
-POST   /api/events         // Create new event
-GET    /api/events/:id     // Get event details
-PUT    /api/events/:id     // Update event
-DELETE /api/events/:id     // Delete event
-```
-
-### Ticket Operations
-```javascript
-POST /api/tickets/book     // Book ticket
-GET  /api/tickets/user/:id // Get user tickets
-POST /api/tickets/transfer // Transfer ticket
-GET  /api/tickets/verify   // Verify ticket
-```
-
-### Database Schema
-```sql
--- Users table
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  wallet_address VARCHAR(255),
-  city VARCHAR(100),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Events table  
-CREATE TABLE events (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  date DATETIME NOT NULL,
-  venue VARCHAR(255),
-  price DECIMAL(10,2),
-  total_tickets INT,
-  available_tickets INT,
-  image_url VARCHAR(500),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tickets table
-CREATE TABLE tickets (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  event_id INT,
-  nft_mint_address VARCHAR(255),
-  qr_code TEXT,
-  status ENUM('active', 'used', 'transferred'),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (event_id) REFERENCES events(id)
-);
-```
-
-## ⛓️ Smart Contract & Minting Service
-
-### Solana Integration
-- **Network**: Devnet (Program ID: `Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw`)
-- **Wallet**: Phantom & MetaMask integration
-- **NFTs**: Real Metaplex NFTs with IPFS metadata
-- **Storage**: Pinata IPFS gateway
-- **Anti-Scalping**: Smart contract enforced resale limits
-
-### Smart Contract Features
-- **One-Time Resale**: Tickets can only be resold once
-- **Max Markup**: 25% maximum markup on original price
-- **Owner Verification**: Only ticket owner can list for resale
-- **Blockchain State**: `has_been_sold` and `sale_count` tracking
-
-### Minting Endpoints
-```javascript
-POST /mint                 // Mint real NFT + smart contract ticket
-POST /list                 // List ticket for resale (with smart contract validation)
-POST /transfer             // Transfer NFT ownership (real blockchain transaction)
-GET  /info/:mintAddress    // Get smart contract ticket info
-```
-
-### Key Features
-- **Real NFT minting** on Solana devnet
-- **Smart contract integration** for anti-scalping
-- **IPFS metadata storage** for permanence
-- **Blockchain state validation** before transfers
-- **Proper NFT ownership transfer** (not new minting)
-
-## 🛠️ Development
-
-### Local Development
-```bash
-# Start in development mode
-npm run dev
-
-# Run tests
-npm test
-
-# Build for production
-npm run build
-```
-
-### Environment Variables
-```env
-# Database
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=password
-DB_NAME=eventix_db
-
-# Authentication
-JWT_SECRET=your-secret-key
-BCRYPT_ROUNDS=10
-
-# Solana
-SOLANA_NETWORK=devnet
-SOLANA_RPC_URL=https://api.devnet.solana.com
-PRIVATE_KEY=your-solana-private-key
-
-# IPFS
-IPFS_GATEWAY=https://ipfs.io/ipfs/
-PINATA_API_KEY=your-pinata-key
-```
-
-## 🚀 Deployment
-
-### Production Setup
-1. **Database**: Set up MySQL on production server
-2. **Environment**: Configure production environment variables
-3. **SSL**: Enable HTTPS for secure wallet connections
-4. **CDN**: Use CDN for static assets
-5. **Monitoring**: Set up logging and monitoring
-
-### Docker Deployment
-```dockerfile
-# Dockerfile example
-FROM node:16-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --production
-COPY . .
-EXPOSE 8080
-CMD ["npm", "start"]
-```
-
-## 🔐 Security Features
-
-- **Password Hashing**: Bcrypt with salt rounds
-- **JWT Authentication**: Secure token-based auth
-- **SQL Injection Protection**: Parameterized queries
-- **CORS Configuration**: Controlled cross-origin requests
-- **Input Validation**: Server-side validation
-- **Wallet Security**: Signature verification
-- **Anti-Scalping**: Smart contract enforced resale limits
-- **Blockchain Validation**: Real-time smart contract state checks
-- **NFT Authenticity**: Immutable blockchain ownership records
-
-## 🎯 Key Features
-
-### User Experience
-- ✅ Responsive design across all devices
-- ✅ Smooth animations and transitions
-- ✅ Intuitive navigation and UX
-- ✅ Real-time wallet integration (Phantom & MetaMask)
-- ✅ QR code ticket verification
-- ✅ Multi-wallet support with proper isolation
-
-### Technical Features
-- ✅ MySQL database with proper relations
-- ✅ RESTful API architecture
-- ✅ **Real Solana NFT minting on devnet**
-- ✅ IPFS decentralized storage via Pinata
-- ✅ Modern JavaScript (ES6+)
-- ✅ Modular component architecture
-- ✅ **Smart contract anti-scalping enforcement**
-
-### Business Features
-- ✅ Event management system
-- ✅ Ticket booking and transfers
-- ✅ User authentication and profiles
-- ✅ **Blockchain-enforced fraud prevention**
-- ✅ **Anti-scalping marketplace (one resale only)**
-- ✅ **Real NFT ownership transfer**
-
-## 📞 Support
-
-For issues and questions:
-- **Email**: support@eventix.com
-- **Documentation**: Check inline code comments
-- **Issues**: Create GitHub issues for bugs
+- **Repository**: https://github.com/NHR-09/eventix-blockchain-ticketing
+- **Smart Contract**: `Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw` (Solana Devnet)
+- **Network**: Solana Devnet
+- **IPFS Gateway**: Pinata
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
-
-## 🚀 Live Demo
-
-- **Repository**: https://github.com/NHR-09/eventix-blockchain-ticketing
-- **Smart Contract**: `Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw` (Solana Devnet)
-- **Network**: Solana Devnet
-- **IPFS**: Pinata Gateway
-
-## 🎫 Anti-Scalping Implementation
-
-The platform implements **real smart contract anti-scalping** rules:
-
-1. **Original Purchase**: Creates NFT + Smart Contract ticket with `has_been_sold = false`
-2. **First Resale**: User can list ticket, smart contract validates ownership and markup
-3. **Blockchain Transfer**: Real `buy_ticket` transaction updates `has_been_sold = true`
-4. **Second Resale Attempt**: Smart contract **blocks** with `TicketAlreadySold` error
-
-This ensures each ticket can only be resold **once**, preventing scalping while maintaining legitimate resale functionality.
 
 **Built with ❤️ for the future of event ticketing**

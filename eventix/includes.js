@@ -69,11 +69,11 @@ function loadFooter() {
       </div>
       <div class="footer-right">
         <div class="social-icons">
-          <a href="#"><img src="whatsapp-logo-variant-svgrepo-com.svg" alt="WhatsApp"></a>
-          <a href="#"><img src="facebook-svgrepo-com.svg" alt="Facebook"></a>
-          <a href="#"><img src="instagram-svgrepo-com.svg" alt="Instagram"></a>
-          <a href="#"><img src="twitter-svgrepo-com.svg" alt="X"></a>
-          <a href="#"><img src="youtube-svgrepo-com.svg" alt="YouTube"></a>
+          <a href="#"><img src="assets/icons/whatsapp-logo-variant-svgrepo-com.svg" alt="WhatsApp"></a>
+          <a href="#"><img src="assets/icons/facebook-svgrepo-com.svg" alt="Facebook"></a>
+          <a href="#"><img src="assets/icons/instagram-svgrepo-com.svg" alt="Instagram"></a>
+          <a href="#"><img src="assets/icons/twitter-svgrepo-com.svg" alt="X"></a>
+          <a href="#"><img src="assets/icons/youtube-svgrepo-com.svg" alt="YouTube"></a>
         </div>
       </div>
     </div>

@@ -48,7 +48,7 @@
         
         ticketList.innerHTML = tickets.map(ticket => `
           <div class="ticket" style="opacity: 0; transform: translateX(-50px);">
-            <img src="${ticket.image || 'concert2.jpg'}" alt="${ticket.name}">
+            <img src="${ticket.image || 'assets/images/concert2.jpg'}" alt="${ticket.name}">
             <div class="ticket-info">
               <h3>${ticket.name}</h3>
               <div style="color: #6b4c7a; margin-bottom: 8px; font-family: 'Inter', sans-serif;">${ticket.description}</div>
@@ -149,10 +149,10 @@
       <p>Select your wallet provider to continue</p>
       <div class="wallet-options">
         <button onclick="connectPhantom()" class="wallet-btn">
-          <img src="phantom.png" alt="Phantom"> Phantom (Solana)
+          <img src="assets/images/phantom.png" alt="Phantom"> Phantom (Solana)
         </button>
         <button onclick="connectMetaMask()" class="wallet-btn">
-          <img src="metamask.png" alt="MetaMask"> MetaMask (Ethereum)
+          <img src="assets/images/metamask.png" alt="MetaMask"> MetaMask (Ethereum)
         </button>
       </div>
 
