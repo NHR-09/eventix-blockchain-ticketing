@@ -95,6 +95,56 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+app.post('/api/google-auth', async (req, res) => {
+  try {
+    console.log('🔐 Google auth request received');
+    const { credential } = req.body;
+    
+    if (!credential) {
+      console.log('❌ No credential provided');
+      return res.json({ success: false, error: 'No credential provided' });
+    }
+    
+    console.log('🔍 Decoding Google JWT token...');
+    
+    // Decode Google JWT token
+    const base64Url = credential.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    
+    const googleUser = JSON.parse(jsonPayload);
+    console.log(`📧 Google user email: ${googleUser.email}`);
+    console.log(`👤 Google user name: ${googleUser.name}`);
+    
+    // Check if user exists
+    let user = await findUserByEmail(googleUser.email);
+    
+    if (!user) {
+      // Create new user from Google data
+      console.log('👤 Creating new user from Google data...');
+      user = await createUser(googleUser.name, googleUser.email, 'google_auth');
+      console.log(`✅ New Google user created: ${googleUser.email}`);
+    } else {
+      console.log(`✅ Existing Google user logged in: ${googleUser.email}`);
+    }
+    
+    const { password: _, ...userWithoutPassword } = user;
+    console.log('✅ Google authentication successful');
+    
+    res.json({ 
+      success: true, 
+      user: userWithoutPassword,
+      message: 'Google login successful'
+    });
+  } catch (error) {
+    console.error('❌ Google auth error:', error);
+    console.error('Error details:', error.message);
+    res.json({ success: false, error: `Google authentication failed: ${error.message}` });
+  }
+});
+
 // Buy ticket endpoint
 app.post('/buy-ticket', async (req, res) => {
   try {
@@ -276,9 +326,11 @@ async function listTicketForSale(mintAddress, price) {
 
 // Add request logging middleware
 app.use((req, res, next) => {
-  console.log(`📡 ${new Date().toLocaleTimeString()} - ${req.method} ${req.path}`);
-  if (req.body && Object.keys(req.body).length > 0) {
-    console.log('   Body:', JSON.stringify(req.body, null, 2));
+  if (req.path !== '/api/google-auth') {
+    console.log(`📡 ${new Date().toLocaleTimeString()} - ${req.method} ${req.path}`);
+    if (req.body && Object.keys(req.body).length > 0) {
+      console.log('   Body:', JSON.stringify(req.body, null, 2));
+    }
   }
   next();
 });

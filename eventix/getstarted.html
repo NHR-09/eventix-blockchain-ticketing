@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
       body {
         margin: 0;
@@ -252,10 +253,12 @@
           <input type="password" placeholder="Password" required>
           <button class="eventix-btn" type="submit">Login</button>
           <div style="margin: 18px 0; text-align:center; color: #6b4c7a;">OR</div>
-          <button class="google-btn" id="googleLogin" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20">
-            Continue with Google
-          </button>
+          <div id="g_id_onload"
+               data-client_id="375732261088-plc0nat6damgvd7dqrqte9i56dms45kg.apps.googleusercontent.com"
+               data-callback="handleGoogleLogin"
+               data-auto_prompt="false">
+          </div>
+          <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
           <div class="small-text">Forgot Password? <a href="#">Reset</a></div>
         </form>
 
@@ -266,10 +269,7 @@
           <input type="password" placeholder="Confirm Password" required>
           <button class="eventix-btn" type="submit">Create Account</button>
           <div style="margin: 18px 0; text-align:center; color: #6b4c7a;">OR</div>
-          <button class="google-btn" id="googleSignup" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20">
-            Continue with Google
-          </button>
+          <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="signup_with" data-shape="rectangular" data-logo_alignment="left"></div>
           <div class="small-text">Already have an account? <a href="#" onclick="switchTab('login')">Login</a></div>
         </form>
       </div>
@@ -333,6 +333,12 @@
 
       const OWNER_EMAIL = "admin@eventix.com";
       const OWNER_PASS = "admin123";
+      
+      // Check if backend is running
+      fetch('http://localhost:3001/api/login', { method: 'OPTIONS' })
+        .catch(() => {
+          console.warn('⚠️ Backend server may not be running on port 3001');
+        });
 
       document.getElementById("loginForm").addEventListener("submit", async function(e){
         e.preventDefault();
@@ -398,6 +404,47 @@
           alert('Registration failed. Please try again.');
         }
       });
+
+      // Google Authentication
+      function handleGoogleLogin(response) {
+        console.log('🔐 Google login response received');
+        
+        if (!response || !response.credential) {
+          console.error('❌ No credential in Google response');
+          alert('Google login failed: No credential received');
+          return;
+        }
+        
+        const credential = response.credential;
+        console.log('📝 Sending credential to backend...');
+        
+        fetch('http://localhost:3001/api/google-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential })
+        })
+        .then(res => {
+          console.log('📡 Backend response status:', res.status);
+          return res.json();
+        })
+        .then(data => {
+          console.log('📋 Backend response data:', data);
+          
+          if (data.success) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('isLoggedIn', 'true');
+            alert('Google login successful!');
+            location.href = 'index.html';
+          } else {
+            console.error('❌ Backend error:', data.error);
+            alert(data.error || 'Google login failed');
+          }
+        })
+        .catch(error => {
+          console.error('❌ Network error:', error);
+          alert('Google login failed. Please check if backend is running.');
+        });
+      }
     </script>
   </body>
   </html>

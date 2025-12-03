@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Eventix – Discover & Experience Events</title>
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:700,900|Quicksand:400,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Quicksand', Arial, sans-serif;
@@ -105,16 +105,26 @@
       margin-bottom: 20px;
     }
 
-    /* Hero */
-    .hero {
+    /* Hero Section */
+    .hero-section {
       position: relative;
-      min-height: 75vh;
+      min-height: 85vh;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
       color: #fff;
       overflow: hidden;
+    }
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(108, 71, 255, 0.4), rgba(75, 47, 207, 0.6));
+      z-index: 1;
     }
     .hero-video {
       position: absolute;
@@ -123,68 +133,85 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      z-index: -2;
-    }
-    .overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(20, 10, 40, 0.55); /* dark overlay */
-      z-index: -1;
+      z-index: 0;
     }
     .hero-content {
       position: relative;
       z-index: 2;
-      padding: 60px 20px;
+      padding: 80px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
     .hero-title {
-      font-family: 'Montserrat', Arial, sans-serif;
-      font-size: 3.5rem;
-      font-weight: 900;
-      margin-bottom: 18px;
-      line-height: 1.2;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      margin-bottom: 24px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
-    .hero-title span {
-      background: linear-gradient(90deg, #6c47ff, #4b2fcf, #ff47d1);
+    .hero-title .highlight {
+      background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcf7f, #4ecdc4, #45b7d1, #96ceb4);
+      background-size: 300% 300%;
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: gradientMove 4s ease infinite;
-      background-size: 200% auto;
+      animation: gradientShift 4s ease-in-out infinite;
+      font-weight: 900;
     }
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
     }
-    .hero-tagline {
-      font-size: 1.2rem;
-      max-width: 700px;
-      margin: 0 auto 36px auto;
-      line-height: 1.7;
-      font-weight: 600;
-      color: #eee;
+    .hero-subtitle {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      font-weight: 400;
+      max-width: 800px;
+      margin: 0 auto 40px auto;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
-    .hero-actions .eventix-btn {
+    .hero-buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+    .hero-btn {
+      font-family: 'Inter', sans-serif;
       font-size: 1.1rem;
-      padding: 12px 32px;
-      border-radius: 10px;
-      box-shadow: 0 6px 16px rgba(108, 71, 255, 0.2);
+      font-weight: 600;
+      padding: 16px 32px;
+      border-radius: 50px;
+      text-decoration: none;
       transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(10px);
+      border: 2px solid transparent;
     }
-    .hero-actions .eventix-btn:hover {
-      transform: translateY(-4px) scale(1.05);
-      box-shadow: 0 8px 28px rgba(108, 71, 255, 0.35);
-    }
-    .hero-actions .eventix-btn.secondary {
-      border: 2px solid #6c47ff;
-      background: transparent;
-      color: #6c47ff;
-    }
-    .hero-actions .eventix-btn.secondary:hover {
-      background: #6c47ff;
+    .hero-btn.primary {
+      background: linear-gradient(135deg, #6c47ff, #4b2fcf);
       color: #fff;
+    }
+    .hero-btn.primary:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 15px 35px rgba(108, 71, 255, 0.4);
+      background: linear-gradient(135deg, #5a3de6, #3d1fa6);
+    }
+    .hero-btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    .hero-btn.secondary:hover {
+      transform: translateY(-3px) scale(1.05);
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 15px 35px rgba(255, 255, 255, 0.1);
     }
     .hero-wave {
       position: absolute;
@@ -216,6 +243,7 @@
       flex-shrink: 0;
       height: 320px;
       object-fit: cover;
+      object-position: 50% 40%;
     }
     .carousel-dots {
       text-align: center;
@@ -303,10 +331,44 @@
       background: #4b2fcf;
     }
 
-    @media (max-width: 700px) {
-      .hero-title { font-size: 2rem; }
+    /* Stats Section */
+    .stats-section {
+      padding: 60px 20px;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 20px;
+    }
+    .stat-item h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #6c47ff;
+      margin: 0 0 8px 0;
+    }
+    .stat-item p {
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #666;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .hero-content { padding: 60px 20px; }
+      .hero-buttons { flex-direction: column; align-items: center; }
+      .hero-btn { width: 100%; max-width: 280px; }
       .section-title { margin-left: 18px; }
       .event-cards { padding: 0 18px 32px 18px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
     }
     /* Footer */
 .eventix-footer {
@@ -384,22 +446,7 @@
   </div>
 
   <!-- Navbar -->
-  <nav class="eventix-navbar">
-    <div class="eventix-logo">Eventix</div>
-    <div class="eventix-navlinks">
-      <span class="city-display" id="cityDisplay">📍 Select City</span>
-      <a href="index.html">Home</a>
-      <a href="events.html">Events</a>
-      <a href="mytickets.html">My Tickets</a>
-      <a href="about.html">About</a>
-      <a href="getstarted.html">
-      <button onclick="logoutUser()" class="eventix-btn secondary" style="margin:10px;">Logout</button>
-
-  <button class="eventix-btn">Get Started</button>
-</a>
-
-    </div>
-  </nav>
+  <div id="navbar"></div>
 
   <!-- Enhanced Hero Section -->
   <section class="hero-section">
@@ -449,7 +496,7 @@
   <div class="carousel">
     <div class="carousel-track" id="carouselTrack">
       <img src="concertbanner.jpg" alt="Concert Events">
-      <img src="concert1.jpeg" alt="Live Music">
+      <img src="concert1.jpg" alt="Live Music">
       <img src="concert2.jpg" alt="Music Festival">
       <img src="standup.jpg" alt="Comedy Shows">
       <img src="art exhibition.jpg" alt="Art Exhibitions">
@@ -508,11 +555,11 @@
   </div>
   
 
+  <script src="includes.js"></script>
   <script>
     // City modal logic
     const cityModal = document.getElementById('cityModal');
     const citySelect = document.getElementById('citySelect');
-    const cityDisplay = document.getElementById('cityDisplay');
 
     function saveCity() {
       const city = citySelect.value;
@@ -522,7 +569,7 @@
       }
       localStorage.setItem("selectedCity", city);
       cityModal.style.display = "none";
-      cityDisplay.textContent = "📍 " + city;
+      loadNavbar(); // Refresh navbar to show selected city
     }
 
     // Show modal only if city not already chosen
@@ -530,7 +577,6 @@
       const savedCity = localStorage.getItem("selectedCity");
       if (savedCity) {
         cityModal.style.display = "none";
-        cityDisplay.textContent = "📍 " + savedCity;
       }
     };
 
@@ -566,55 +612,11 @@
       index = (index + 1) % slides.length;
       moveToSlide(index);
     }, 4000);
-function logoutUser(){
-  localStorage.clear();
-  alert("Logged out successfully!");
-  location.href = "getstarted.html";
-}
+
 
   </script>
-    <!-- Enhanced Footer -->
-  <footer class="eventix-footer">
-    <div class="footer-container">
-      <div class="footer-section">
-        <div class="footer-logo">Eventix</div>
-        <p class="footer-description">
-          Revolutionizing event ticketing with blockchain technology. Secure, transparent, and fraud-proof tickets for the modern world.
-        </p>
-        <div class="social-icons">
-          <a href="#"><img src="whatsapp-logo-variant-svgrepo-com.svg" alt="WhatsApp"></a>
-          <a href="#"><img src="facebook-svgrepo-com.svg" alt="Facebook"></a>
-          <a href="#"><img src="instagram-svgrepo-com.svg" alt="Instagram"></a>
-          <a href="#"><img src="twitter-svgrepo-com.svg" alt="X"></a>
-          <a href="#"><img src="youtube-svgrepo-com.svg" alt="YouTube"></a>
-        </div>
-      </div>
-      
-      <div class="footer-section">
-        <h3>Quick Links</h3>
-        <div class="footer-links">
-          <a href="index.html">Home</a>
-          <a href="events.html">Browse Events</a>
-          <a href="mytickets.html">My Tickets</a>
-          <a href="about.html">About Us</a>
-        </div>
-      </div>
-      
-      <div class="footer-section">
-        <h3>Support</h3>
-        <div class="footer-links">
-          <a href="#">Help Center</a>
-          <a href="#">Contact Support</a>
-          <a href="#">List Your Event</a>
-          <a href="#">Privacy Policy</a>
-        </div>
-      </div>
-      
-      <div class="footer-bottom">
-        <p>&copy; 2025 Eventix. All rights reserved. Built with ♥️ for the future of events.</p>
-      </div>
-    </div>
-  </footer>
+  <!-- Footer -->
+  <div id="footer"></div>
 
 </body>
 </html>
