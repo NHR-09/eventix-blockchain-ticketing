@@ -1,5 +1,5 @@
 // Currency conversion utilities
-const SOL_TO_INR_RATE = 15000; // 1 SOL ≈ ₹15,000 (update as needed)
+const SOL_TO_INR_RATE = 11931; // 1 SOL ≈ ₹15,000 (update as needed)
 
 // Convert SOL to INR
 function solToInr(solAmount) {
