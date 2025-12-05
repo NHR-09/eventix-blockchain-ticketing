@@ -143,9 +143,9 @@ async function uploadToIPFS(filePath, fileName = 'ticket.png') {
 
   const formData = new FormData();
   formData.append('file', fs.createReadStream(filePath));
-  formData.append('name', fileName);
+  formData.append('pinataMetadata', JSON.stringify({ name: fileName }));
 
-  const res = await axios.post('https://uploads.pinata.cloud/v3/files', formData, {
+  const res = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
     headers: {
       ...formData.getHeaders(),
       Authorization: `Bearer ${PINATA_JWT}`,
@@ -153,8 +153,8 @@ async function uploadToIPFS(filePath, fileName = 'ticket.png') {
     timeout: 60000,
   });
 
-  const cid = res?.data?.data?.cid;
-  if (!cid) throw new Error(`Pinata response missing CID`);
+  const cid = res?.data?.IpfsHash;
+  if (!cid) throw new Error(`Pinata response missing IpfsHash`);
 
   const url = `https://${PINATA_GATEWAY}/ipfs/${cid}`;
   console.log('  ✅ Pinata file upload successful:', url);
@@ -165,20 +165,20 @@ async function uploadJSONToIPFS(metadata, fileName = 'metadata.json') {
   if (!PINATA_JWT) throw new Error('PINATA_JWT not set in environment.');
 
   console.log('📄 Uploading JSON metadata to Pinata...');
-  const formData = new FormData();
-  const blob = Buffer.from(JSON.stringify(metadata));
-  formData.append('file', blob, { filename: fileName, contentType: 'application/json' });
-
-  const res = await axios.post('https://uploads.pinata.cloud/v3/files', formData, {
+  
+  const res = await axios.post('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+    pinataContent: metadata,
+    pinataMetadata: { name: fileName }
+  }, {
     headers: {
-      ...formData.getHeaders(),
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${PINATA_JWT}`,
     },
     timeout: 60000,
   });
 
-  const cid = res?.data?.data?.cid;
-  if (!cid) throw new Error(`Pinata response missing CID`);
+  const cid = res?.data?.IpfsHash;
+  if (!cid) throw new Error(`Pinata response missing IpfsHash`);
 
   const url = `https://${PINATA_GATEWAY}/ipfs/${cid}`;
   console.log('  ✅ Pinata metadata upload successful:', url);

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+  <script src="currency-utils.js"></script>
 </head>
 <body>
   <div id="navbar"></div>
@@ -31,7 +32,7 @@
       <h2>Purchase Ticket</h2>
       <div id="ticketDetails"></div>
       <div style="margin: 20px 0;">
-        <strong>Total: <span id="totalPrice"></span> SOL</strong>
+        <strong>Total: <span id="totalPrice"></span></strong>
       </div>
       <div id="purchaseButtons" style="display: flex; gap: 10px; justify-content: center;">
         <button id="confirmBtn" class="eventix-btn" onclick="confirmPurchase()">Confirm Purchase</button>
@@ -80,7 +81,7 @@
               <div class="event-card-title">${event.name}</div>
               <div class="event-card-type">${event.description}</div>
               <div style="color: #4b0082; font-weight: 600; margin: 8px 0; font-family: 'Inter', sans-serif;">${event.eventDate}</div>
-              <div class="price-text" style="margin: 8px 0;">${event.price} SOL</div>
+              <div class="price-text" style="margin: 8px 0;">${formatDualPrice(event.price)}</div>
               <button onclick="buyTicket('${event.id}', '${event.name}', '${event.description}', '${event.eventDate}', ${event.price})">
                 Buy Ticket
               </button>
@@ -127,8 +128,8 @@
               <div class="event-card-type">${ticket.description}</div>
               <div style="color: #4b0082; font-weight: 600; margin: 8px 0; font-family: 'Inter', sans-serif;">${ticket.eventDate}</div>
               <div style="color: #b76e79; font-weight: 600; margin: 8px 0;">
-                <span class="price-text">${ticket.price} SOL</span>
-                ${ticket.price > ticket.originalPrice ? `<span class="mono" style="font-size:0.8rem; color:#6b4c7a;">(was ${ticket.originalPrice} SOL)</span>` : ''}
+                <span class="price-text">${formatDualPrice(ticket.price)}</span>
+                ${ticket.price > ticket.originalPrice ? `<span class="mono" style="font-size:0.8rem; color:#6b4c7a;">(was ${formatDualPrice(ticket.originalPrice)})</span>` : ''}
               </div>
               <div class="mono" style="font-size: 0.8rem; color: #6b4c7a; margin: 4px 0;">
                 Mint: ${ticket.mint.slice(0,8)}...${ticket.mint.slice(-4)}
@@ -192,7 +193,7 @@
           ${isMarketplacePurchase ? '<p style="color: #ff6b6b; font-weight: 600;">🔄 Resale Ticket</p>' : '<p style="color: #51cf66; font-weight: 600;">🎫 New Ticket</p>'}
         </div>
       `;
-      document.getElementById('totalPrice').textContent = selectedTicket.price;
+      document.getElementById('totalPrice').innerHTML = formatDualPrice(selectedTicket.price);
     }
 
     function closePurchaseModal() {
@@ -262,7 +263,8 @@
               alert(`❌ Transaction signing failed: ${signError.message}`);
             }
           } else {
-            alert(`✅ Purchase successful! ${isMarketplacePurchase ? 'Ticket transferred to your wallet.' : 'Ticket minted: ' + result.mintAddress.slice(0,8) + '...'}`);
+            const inrAmount = solToInr(selectedTicket.price);
+            alert(`✅ Purchase successful! Paid ${formatINR(inrAmount)} (${formatSOL(selectedTicket.price)}) ${isMarketplacePurchase ? 'Ticket transferred to your wallet.' : 'Ticket minted: ' + result.mintAddress.slice(0,8) + '...'}`);
             if (isMarketplacePurchase) {
               loadMarketplace();
             }

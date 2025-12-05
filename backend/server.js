@@ -32,6 +32,7 @@ function loadEvents() {
         description: event.venue,
         eventDate: event.date,
         price: parseFloat(event.price.replace(' SOL', '')),
+        priceINR: event.priceINR || Math.round(parseFloat(event.price.replace(' SOL', '')) * 15000),
         seat: 'GA-001',
         image: event.image
       };

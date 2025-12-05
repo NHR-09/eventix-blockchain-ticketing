@@ -7,6 +7,7 @@
       "date":"Dec 25, 2025",
       "venue":"Indie Night Concert - VIP Access",
       "price":"0.1 SOL",
+      "priceINR":1500,
       "image":"assets/images/concert2.jpg",
       "description":"Exclusive VIP access to the hottest indie concert of the year"
     },
@@ -17,6 +18,7 @@
       "date":"Jan 15, 2025",
       "venue":"Annual Music Festival",
       "price":"0.08 SOL",
+      "priceINR":1200,
       "image":"assets/images/concert1.jpg",
       "description":"Three days of non-stop music from top artists"
     },
@@ -27,6 +29,7 @@
       "date":"Feb 10, 2025",
       "venue":"Comedy Show with Top Comedians",
       "price":"0.05 SOL",
+      "priceINR":750,
       "image":"assets/images/standup.jpg",
       "description":"Laugh out loud with the best comedians in town"
     },
@@ -37,6 +40,7 @@
       "date":"Mar 5, 2025",
       "venue":"Modern Art Exhibition",
       "price":"0.03 SOL",
+      "priceINR":450,
       "image":"assets/images/art exhibition.jpg",
       "description":"Discover contemporary art from emerging artists"
     },
@@ -47,6 +51,7 @@
       "date":"Apr 20, 2025",
       "venue":"Multi-Sport Championship",
       "price":"0.12 SOL",
+      "priceINR":1800,
       "image":"assets/images/sportsbanner.jpg",
       "description":"Ultimate sports championship with multiple events"
     },
@@ -57,6 +62,7 @@
       "date":"Dec 8, 2025",
       "venue":"Yas Marina Circuit, Abu Dhabi",
       "price":"0.25 SOL",
+      "priceINR":3750,
       "image":"assets/images/f1.jpg",
       "description":"Experience the thrill of Formula 1 at the season finale in Abu Dhabi"
     }

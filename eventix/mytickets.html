@@ -21,6 +21,7 @@
   <div id="footer"></div>
 
   <script src="includes.js"></script>
+  <script src="currency-utils.js"></script>
   <script>
     async function loadMyTickets() {
       const loadingMsg = document.getElementById('loadingMsg');
@@ -59,7 +60,7 @@
               </span>
             </div>
             <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
-              <div class="price-text" style="font-size: 1.3rem;">${ticket.price} SOL</div>
+              <div class="price-text" style="font-size: 1.3rem;">${formatDualPrice(ticket.price)}</div>
               <canvas id="qr_${ticket.mint}" style="border: 2px solid #e2e8f0; border-radius: 8px;"></canvas>
               <div style="display: flex; gap: 10px;">
                 ${!ticket.isListed ? `<button class="eventix-btn secondary" onclick="listForResale('${ticket.mint}', ${ticket.price})">List for Sale</button>` : '<button class="eventix-btn" disabled style="opacity: 0.6;">Listed</button>'}
@@ -96,7 +97,11 @@
 
     
     async function listForResale(mintAddress, currentPrice) {
-      const newPrice = prompt(`Enter resale price in SOL (current: ${currentPrice}):`, currentPrice * 1.1);
+      const currentINR = solToInr(currentPrice);
+      const suggestedINR = Math.round(currentINR * 1.1);
+      const newPriceINR = prompt(`Enter resale price in INR (current: ₹${currentINR}):`, suggestedINR);
+      if (!newPriceINR || newPriceINR <= 0) return;
+      const newPrice = inrToSol(newPriceINR);
       if (!newPrice || newPrice <= 0) return;
       
       const wallet = localStorage.getItem('wallet');
@@ -121,7 +126,7 @@
         const result = await response.json();
         
         if (result.success) {
-          alert(`✅ Ticket listed for sale at ${newPrice} SOL!`);
+          alert(`✅ Ticket listed for sale at ${formatINR(newPriceINR)} (${formatSOL(newPrice)})!`);
           loadMyTickets(); // Reload tickets
         } else {
           alert(`❌ Failed to list ticket: ${result.error}`);
