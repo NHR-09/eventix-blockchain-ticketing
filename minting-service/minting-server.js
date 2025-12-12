@@ -13,6 +13,8 @@ import {
   PublicKey,
   SystemProgram,
 } from '@solana/web3.js';
+
+const LAMPORTS_PER_SOL_CONST = 1_000_000_000;
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import { keypairIdentity, generateSigner } from '@metaplex-foundation/umi';
 import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
@@ -51,6 +53,7 @@ const RPC_URL = process.env.RPC_URL;
 const PINATA_JWT = process.env.PINATA_JWT;
 const PINATA_GATEWAY = process.env.PINATA_GATEWAY;
 const KEYPAIR_PATH = process.env.KEYPAIR_PATH;
+const ORGANIZER_PUBLIC_KEY = process.env.ORGANIZER_PUBLIC_KEY || process.env.dummykey;
 // Load program ID from IDL file but use compatible structure
 const idlPath = path.join(__dirname, '../target/idl/ticket_market.json');
 const originalIDL = JSON.parse(fs.readFileSync(idlPath, 'utf8'));
@@ -364,12 +367,13 @@ app.post('/list', async (req, res) => {
     const { mintAddress, price } = req.body;
     console.log(`📝 REAL SMART CONTRACT LISTING: ${mintAddress} for ${price} SOL`);
     
+    const organizerPubkey = new PublicKey(ORGANIZER_PUBLIC_KEY);
     const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
     const connection = await createRobustConnection(RPC_URL);
     
     const mintPubkey = new PublicKey(mintAddress);
     const [ticketPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('ticket'), solKeypair.publicKey.toBuffer(), mintPubkey.toBuffer()],
+      [Buffer.from('ticket'), organizerPubkey.toBuffer(), mintPubkey.toBuffer()],
       PROGRAM_ID
     );
     
@@ -427,12 +431,12 @@ app.get('/info/:mintAddress', async (req, res) => {
     const { mintAddress } = req.params;
     console.log(`🔍 REAL SMART CONTRACT INFO: ${mintAddress}`);
     
-    const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
+    const organizerPubkey = new PublicKey(ORGANIZER_PUBLIC_KEY);
     const connection = await createRobustConnection(RPC_URL);
     
     const mintPubkey = new PublicKey(mintAddress);
     const [ticketPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('ticket'), solKeypair.publicKey.toBuffer(), mintPubkey.toBuffer()],
+      [Buffer.from('ticket'), organizerPubkey.toBuffer(), mintPubkey.toBuffer()],
       PROGRAM_ID
     );
     
@@ -464,6 +468,7 @@ app.post('/transfer', async (req, res) => {
     const { mintAddress, fromWallet, toWallet, price } = req.body;
     console.log(`🔄 REAL SMART CONTRACT TRANSFER: ${mintAddress}`);
     
+    const organizerPubkey = new PublicKey(ORGANIZER_PUBLIC_KEY);
     const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
     const connection = await createRobustConnection(RPC_URL);
     
@@ -473,7 +478,7 @@ app.post('/transfer', async (req, res) => {
     
     // Get ticket PDA (created by organizer)
     const [ticketPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('ticket'), solKeypair.publicKey.toBuffer(), mintPubkey.toBuffer()],
+      [Buffer.from('ticket'), organizerPubkey.toBuffer(), mintPubkey.toBuffer()],
       PROGRAM_ID
     );
     
@@ -547,6 +552,206 @@ app.post('/transfer', async (req, res) => {
   }
 });
 
+// Get complete ticket lifecycle
+app.get('/lifecycle/:mintAddress', async (req, res) => {
+  try {
+    const { mintAddress } = req.params;
+    console.log(`🔄 Getting complete lifecycle for: ${mintAddress}`);
+
+    const connection = await createRobustConnection(RPC_URL);
+    const mintPubkey = new PublicKey(mintAddress);
+
+    // Helper to compute PDA given an organizer pubkey
+    const computePda = (organizerPubkey) => {
+      return PublicKey.findProgramAddressSync(
+        [Buffer.from('ticket'), organizerPubkey.toBuffer(), mintPubkey.toBuffer()],
+        PROGRAM_ID
+      )[0];
+    };
+
+    // Try 1: organizer from env (preferred)
+    let organizerCandidate = process.env.ORGANIZER_PUBLIC_KEY;
+    let ticketPda = null;
+
+    if (organizerCandidate) {
+      try {
+        const organizerPubkey = new PublicKey(organizerCandidate);
+        const pda = computePda(organizerPubkey);
+        const info = await connection.getAccountInfo(pda);
+        if (info) {
+          console.log('Found ticket PDA using ORGANIZER_PUBLIC_KEY');
+          ticketPda = pda;
+        } else {
+          console.log('No account at PDA computed from ORGANIZER_PUBLIC_KEY');
+        }
+      } catch (e) {
+        console.log('Invalid ORGANIZER_PUBLIC_KEY in env:', e.message);
+      }
+    }
+
+    // Try 2: fallback to server keypair if not found
+    if (!ticketPda) {
+      try {
+        const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
+        const serverPubkey = solKeypair.publicKey;
+        const pda = computePda(serverPubkey);
+        const info = await connection.getAccountInfo(pda);
+        if (info) {
+          console.log('Found ticket PDA using server keypair (KEYPAIR_PATH)');
+          ticketPda = pda;
+        } else {
+          console.log('No account at PDA computed from server keypair');
+        }
+      } catch (e) {
+        console.log('Server keypair read failed or not present:', e.message);
+      }
+    }
+
+    // Try 3: search program accounts by mint field (robust, always works if ticket exists)
+    if (!ticketPda) {
+      console.log('Searching program accounts for ticket with this mint (this may take a moment)...');
+
+      // Anchor discriminator = 8 bytes; mint offset = 8 + 51 = 59
+      const mintFieldOffset = 8 + 51; // 59
+      // Account size: Anchor account size = 8 + Ticket::LEN (93) = 101
+      const expectedSize = 8 + 93; // 101
+
+      const programAccounts = await connection.getProgramAccounts(PROGRAM_ID, {
+        commitment: 'confirmed',
+        filters: [
+          { dataSize: expectedSize },
+          { memcmp: { offset: mintFieldOffset, bytes: mintPubkey.toBase58() } }
+        ]
+      });
+
+      if (programAccounts.length > 0) {
+        // If there's more than one, take the most recent (or first)
+        ticketPda = programAccounts[0].pubkey;
+        console.log('Found ticket account via program accounts search:', ticketPda.toBase58());
+      } else {
+        console.log('No program accounts matched the mint.');
+      }
+    }
+
+    if (!ticketPda) {
+      return res.json({ success: false, error: 'Ticket not found on blockchain (no matching PDA/account)' });
+    }
+
+    // Read the account data now that we have ticketPda
+    const accountInfo = await connection.getAccountInfo(ticketPda);
+    if (!accountInfo) {
+      return res.json({ success: false, error: 'Ticket account not found after PDA discovery' });
+    }
+
+    const data = accountInfo.data;
+
+    // Parse according to Rust struct:
+    // discriminator 8 bytes
+    // owner: bytes 0..32
+    // price: bytes 32..40
+    // resale_allowed: byte 40
+    // max_markup: byte 41
+    // original_price: bytes 42..50
+    // is_listed: byte 50
+    // mint: bytes 51..83
+    // has_been_sold: byte 83
+    // sale_count: byte 84
+    const owner = new PublicKey(data.slice(8 + 0, 8 + 32)).toString();
+    const priceLamports = Number(data.readBigUInt64LE(8 + 32));
+    const price = priceLamports / LAMPORTS_PER_SOL;
+    const resaleAllowed = data[8 + 40] === 1;
+    const maxMarkup = data[8 + 41];
+    const originalPrice = Number(data.readBigUInt64LE(8 + 42)) / LAMPORTS_PER_SOL;
+    const isListed = data[8 + 50] === 1;
+    const mintFromData = new PublicKey(data.slice(8 + 51, 8 + 83)).toString();
+    const hasBeenSold = data[8 + 83] === 1;
+    const saleCount = data[8 + 84];
+
+    // Get transaction history: include both PDAs and mint txs
+    const history = [];
+
+    // PDA (smart contract) transactions
+    const pdaSignatures = await connection.getSignaturesForAddress(ticketPda, { limit: 20 });
+    for (const sig of pdaSignatures) {
+      const tx = await connection.getTransaction(sig.signature, { maxSupportedTransactionVersion: 0 });
+      if (tx) {
+        history.push({
+          signature: sig.signature,
+          blockTime: tx.blockTime,
+          status: tx.meta?.err ? 'Failed' : 'Success',
+          type: 'Smart Contract',
+          explorerUrl: `https://explorer.solana.com/tx/${sig.signature}?cluster=${CLUSTER || 'devnet'}`
+        });
+      }
+    }
+
+    // Mint transactions
+    const mintSignatures = await connection.getSignaturesForAddress(mintPubkey, { limit: 10 });
+    for (const sig of mintSignatures) {
+      const tx = await connection.getTransaction(sig.signature, { maxSupportedTransactionVersion: 0 });
+      if (tx) {
+        history.push({
+          signature: sig.signature,
+          blockTime: tx.blockTime,
+          status: tx.meta?.err ? 'Failed' : 'Success',
+          type: 'NFT Transaction',
+          explorerUrl: `https://explorer.solana.com/tx/${sig.signature}?cluster=${CLUSTER || 'devnet'}`
+        });
+      }
+    }
+
+    // Sort by blockTime desc
+    history.sort((a, b) => (b.blockTime || 0) - (a.blockTime || 0));
+
+    const lifecycle = {
+      currentState: {
+        pda: ticketPda.toBase58(),
+        owner,
+        price,
+        originalPrice,
+        resaleAllowed,
+        maxMarkup,
+        isListed,
+        mint: mintFromData,
+        hasBeenSold,
+        saleCount
+      },
+      transactionHistory: history,
+      lifecycle: {
+        minted: history.length > 0,
+        totalTransactions: history.length,
+        currentOwner: owner,
+        priceHistory: {
+          original: originalPrice,
+          current: price,
+          markup: originalPrice > 0 ? (((price - originalPrice) / originalPrice) * 100).toFixed(2) : '0.00'
+        },
+        resaleInfo: {
+          count: saleCount,
+          maxAllowed: 3,
+          canResale: saleCount < 3,
+          isListed
+        },
+        compliance: {
+          antiScalpingActive: true,
+          maxMarkup: maxMarkup,
+          withinLimits: price <= (originalPrice * (1 + maxMarkup / 100))
+        },
+        explorerUrls: {
+          mint: `https://explorer.solana.com/address/${mintAddress}?cluster=${CLUSTER || 'devnet'}`,
+          program: `https://explorer.solana.com/address/${PROGRAM_ID.toString()}?cluster=${CLUSTER || 'devnet'}`,
+          pda: `https://explorer.solana.com/address/${ticketPda.toBase58()}?cluster=${CLUSTER || 'devnet'}`
+        }
+      }
+    };
+
+    res.json({ success: true, lifecycle });
+  } catch (error) {
+    console.error('❌ Error getting ticket lifecycle:', error);
+    res.json({ success: false, error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🏭 Minting service running on http://localhost:${PORT}`);
   console.log('📋 Available endpoints:');
@@ -554,4 +759,5 @@ app.listen(PORT, () => {
   console.log('  POST /list - List ticket for sale');
   console.log('  POST /transfer - Transfer NFT ownership');
   console.log('  GET /info/:mintAddress - Get ticket info');
+  console.log('  GET /lifecycle/:mintAddress - Get complete ticket lifecycle');
 });

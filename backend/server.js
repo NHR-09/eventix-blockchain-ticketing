@@ -47,6 +47,8 @@ function loadEvents() {
 
 const TICKET_TYPES = loadEvents();
 
+// ==================== AUTHENTICATION FUNCTIONS ====================
+
 // Authentication endpoints
 app.post('/api/register', async (req, res) => {
   try {
@@ -146,7 +148,9 @@ app.post('/api/google-auth', async (req, res) => {
   }
 });
 
-// Buy ticket endpoint
+// ==================== TICKET PURCHASE FUNCTIONS ====================
+
+
 app.post('/buy-ticket', async (req, res) => {
   try {
     console.log('🎫 Processing ticket purchase request...');
@@ -207,6 +211,8 @@ app.post('/buy-ticket', async (req, res) => {
   }
 });
 
+// ==================== MARKETPLACE FUNCTIONS ====================
+
 // List ticket for sale
 app.post('/list-ticket', async (req, res) => {
   try {
@@ -247,6 +253,8 @@ app.post('/list-ticket', async (req, res) => {
   }
 });
 
+// ==================== GET FUNCTIONS ====================
+
 // Get user's tickets
 app.get('/my-tickets', async (req, res) => {
   const walletAddress = req.query.wallet || req.headers['wallet-address'];
@@ -276,6 +284,8 @@ app.get('/available-tickets', (req, res) => {
   console.log(`   ✅ Returning ${available.length} available ticket types`);
   res.json(available);
 });
+
+// ==================== MINTING SERVICE FUNCTIONS ====================
 
 // Mint ticket function - calls minting service
 async function mintTicket(ticketInfo) {
@@ -325,6 +335,8 @@ async function listTicketForSale(mintAddress, price) {
   }
 }
 
+// ==================== MIDDLEWARE ====================
+
 // Add request logging middleware
 app.use((req, res, next) => {
   if (req.path !== '/api/google-auth') {
@@ -335,6 +347,8 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// ==================== NFT TRANSFER FUNCTIONS ====================
 
 // Transfer NFT function - calls minting service
 async function transferNFT(mintAddress, fromWallet, toWallet, price) {
@@ -431,6 +445,8 @@ app.get('/marketplace', async (req, res) => {
   res.json(ticketsWithResaleInfo);
 });
 
+// ==================== SERVER STARTUP ====================
+
 const server = app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
   console.log('📋 Available endpoints:');
@@ -442,8 +458,6 @@ const server = app.listen(PORT, () => {
   console.log('  GET /my-tickets - Get user tickets');
   console.log('  GET /available-tickets - Get available tickets');
   console.log('  GET /marketplace - Get marketplace listings');
-  console.log('\n🎫 Demo tickets available!');
-  console.log('\n🔗 Make sure minting service is running on port 3002');
 });
 
 server.on('error', (err) => {
