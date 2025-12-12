@@ -142,9 +142,9 @@
               <canvas id="qr_${ticket.mint}" style="border: 2px solid #e2e8f0; border-radius: 8px;"></canvas>
               <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 ${!ticket.isListed ? `<button class="eventix-btn secondary" onclick="listForResale('${ticket.mint}', ${ticket.price})">List for Sale</button>` : '<button class="eventix-btn" disabled style="opacity: 0.6;">Listed</button>'}
-                <button class="eventix-btn" onclick="this.disabled=true;this.innerHTML='Loading...';viewBlockchainInfo('${ticket.mint}').finally(()=>{this.disabled=false;this.innerHTML='🔄 Lifecycle'})">🔄 Lifecycle</button>
-                <button class="eventix-btn" onclick="this.disabled=true;this.innerHTML='Loading...';viewTransactionHistory('${ticket.mint}').finally(()=>{this.disabled=false;this.innerHTML='📜 History'})">📜 History</button>
-                <button class="eventix-btn" onclick="this.disabled=true;this.innerHTML='Loading...';openSolanaExplorer('${ticket.mint}');setTimeout(()=>{this.disabled=false;this.innerHTML='🔗 Explorer'},1000)">🔗 Explorer</button>
+                <button class="eventix-btn" onclick="this.disabled=true;this.innerHTML='Loading...';viewBlockchainInfo('${ticket.mint}').finally(()=>{this.disabled=false;this.innerHTML=' Lifecycle'})"> Lifecycle</button>
+                <button class="eventix-btn" onclick="this.disabled=true;this.innerHTML='Loading...';viewTransactionHistory('${ticket.mint}').finally(()=>{this.disabled=false;this.innerHTML=' History'})"> History</button>
+                <button class="eventix-btn" onclick="this.disabled=true;this.innerHTML='Loading...';openSolanaExplorer('${ticket.mint}');setTimeout(()=>{this.disabled=false;this.innerHTML=' Explorer'},1000)"> Explorer</button>
               </div>
             </div>
           </div>
