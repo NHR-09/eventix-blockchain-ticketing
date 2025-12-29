@@ -67,7 +67,7 @@
       
       try {
         console.log('🎪 Loading available events...');
-        const response = await fetch('http://localhost:3001/available-tickets');
+        const response = await fetch('https://eventix-backend1.onrender.com/available-tickets');
         const events = await response.json();
         
         loadingMsg.style.display = 'none';
@@ -110,7 +110,7 @@
       
       try {
         console.log('🏪 Loading marketplace listings...');
-        const response = await fetch('http://localhost:3001/marketplace');
+        const response = await fetch('https://eventix-backend1.onrender.com/marketplace');
         const listings = await response.json();
         
         console.log(`✅ Loaded ${listings.length} marketplace listings`);
@@ -219,7 +219,7 @@
         
         let response;
         if (isMarketplacePurchase) {
-          response = await fetch('http://localhost:3001/buy-from-marketplace', {
+          response = await fetch('https://eventix-backend1.onrender.com/buy-from-marketplace', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -228,7 +228,7 @@
             })
           });
         } else {
-          response = await fetch('http://localhost:3001/buy-ticket', {
+          response = await fetch('https://eventix-backend1.onrender.com/buy-ticket', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

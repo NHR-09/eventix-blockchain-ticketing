@@ -105,8 +105,23 @@ console.log(`   Program ID: ${PROGRAM_ID.toBase58()}`);
 
 function readKeypairFromFile(filePath) {
   try {
-    // Try reading from file first (local development)
-    if (fs.existsSync(filePath)) {
+    // Check if we're in production (Render) - prioritize environment variable
+    const keypairEnv = process.env.SOLANA_KEYPAIR;
+    if (keypairEnv) {
+      console.log('📁 Reading keypair from environment variable (production)');
+      try {
+        const secret = JSON.parse(keypairEnv);
+        if (Array.isArray(secret) && secret.length === 64) {
+          return Keypair.fromSecretKey(Uint8Array.from(secret));
+        }
+        console.log('❌ Environment keypair invalid format');
+      } catch (parseError) {
+        console.log('❌ Failed to parse environment keypair:', parseError.message);
+      }
+    }
+    
+    // Fallback to file (local development)
+    if (filePath && fs.existsSync(filePath)) {
       console.log(`📁 Reading keypair from file: ${filePath}`);
       const secret = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       if (Array.isArray(secret) && secret.length === 64) {
@@ -114,17 +129,7 @@ function readKeypairFromFile(filePath) {
       }
     }
     
-    // Fallback to environment variable (production)
-    const keypairEnv = process.env.SOLANA_KEYPAIR;
-    if (keypairEnv) {
-      console.log('📁 Reading keypair from environment variable');
-      const secret = JSON.parse(keypairEnv);
-      if (Array.isArray(secret) && secret.length === 64) {
-        return Keypair.fromSecretKey(Uint8Array.from(secret));
-      }
-    }
-    
-    throw new Error('Invalid keypair format or not found');
+    throw new Error('No valid keypair found in environment variable or file');
   } catch (e) {
     throw new Error(`Failed to read keypair: ${e.message}`);
   }

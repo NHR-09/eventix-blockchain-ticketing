@@ -131,13 +131,13 @@
       
       try {
         console.log('🎫 Loading user tickets from backend...');
-        let response = await fetch(`http://localhost:3001/my-tickets?wallet=${encodeURIComponent(finalWalletAddress)}`);
+        let response = await fetch(`https://eventix-backend1.onrender.com/my-tickets?wallet=${encodeURIComponent(finalWalletAddress)}`);
         let tickets = await response.json();
         
         // If no tickets found with current wallet, try the known ticket owner address
         if (tickets.length === 0 && finalWalletAddress !== 'JTkPjviHTdpF7kEfZZC87XwMHLSAfYc1AaAYDGcT1H5') {
           console.log('🔄 No tickets found with current wallet, trying known owner address...');
-          response = await fetch(`http://localhost:3001/my-tickets?wallet=${encodeURIComponent('JTkPjviHTdpF7kEfZZC87XwMHLSAfYc1AaAYDGcT1H5')}`);
+          response = await fetch(`https://eventix-backend1.onrender.com/my-tickets?wallet=${encodeURIComponent('JTkPjviHTdpF7kEfZZC87XwMHLSAfYc1AaAYDGcT1H5')}`);
           tickets = await response.json();
           
           if (tickets.length > 0) {
@@ -228,7 +228,7 @@
       try {
         console.log(`💰 Listing ticket ${mintAddress} for ${newPrice} SOL`);
         
-        const response = await fetch('http://localhost:3001/list-ticket', {
+        const response = await fetch('https://eventix-backend1.onrender.com/list-ticket', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -255,7 +255,7 @@
     // Blockchain traversal functions
     async function viewBlockchainInfo(mintAddress) {
       try {
-        const response = await fetch(`http://localhost:3002/lifecycle/${mintAddress}`);
+        const response = await fetch(`https://eventix-blockchain-ticketing.onrender.com/lifecycle/${mintAddress}`);
         const data = await response.json();
         
         if (data.success) {
@@ -358,7 +358,7 @@
     
     async function viewTransactionHistory(mintAddress) {
       try {
-        const response = await fetch(`http://localhost:3002/lifecycle/${mintAddress}`);
+        const response = await fetch(`https://eventix-blockchain-ticketing.onrender.com/lifecycle/${mintAddress}`);
         const data = await response.json();
         
         if (data.success && data.lifecycle.transactionHistory.length > 0) {

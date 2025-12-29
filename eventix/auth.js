@@ -13,7 +13,7 @@ import {
 
 const API_BASE = window.location.hostname === 'localhost' 
   ? 'http://localhost:3001/api'
-  : 'https://your-backend-url.com/api';
+  : 'https://eventix-backend1.onrender.com/api';
 
 // Firebase Configuration
 const firebaseConfig = {
