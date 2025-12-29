@@ -295,7 +295,7 @@ async function mintTicket(ticketInfo) {
   try {
     console.log(`🔄 Calling minting service for: ${ticketInfo.name}`);
     
-    const response = await fetch('http://localhost:3002/mint', {
+    const response = await fetch('https://eventix-blockchain-ticketing.onrender.com/mint', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -322,7 +322,7 @@ async function listTicketForSale(mintAddress, price) {
   try {
     console.log(`🔄 Calling listing service for: ${mintAddress} at ${price} SOL`);
     
-    const response = await fetch('http://localhost:3002/list', {
+    const response = await fetch('https://eventix-blockchain-ticketing.onrender.com/list', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mintAddress, price })
@@ -358,7 +358,7 @@ async function transferNFT(mintAddress, fromWallet, toWallet, price) {
   try {
     console.log(`🔄 Calling NFT transfer service: ${mintAddress} from ${fromWallet} to ${toWallet}`);
     
-    const response = await fetch('http://localhost:3002/transfer', {
+    const response = await fetch('https://eventix-blockchain-ticketing.onrender.com/transfer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
