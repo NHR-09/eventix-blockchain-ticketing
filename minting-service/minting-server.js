@@ -367,13 +367,12 @@ app.post('/list', async (req, res) => {
     const { mintAddress, price } = req.body;
     console.log(`📝 REAL SMART CONTRACT LISTING: ${mintAddress} for ${price} SOL`);
     
-    const organizerPubkey = new PublicKey(ORGANIZER_PUBLIC_KEY);
     const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
     const connection = await createRobustConnection(RPC_URL);
     
     const mintPubkey = new PublicKey(mintAddress);
     const [ticketPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('ticket'), organizerPubkey.toBuffer(), mintPubkey.toBuffer()],
+      [Buffer.from('ticket'), solKeypair.publicKey.toBuffer(), mintPubkey.toBuffer()],
       PROGRAM_ID
     );
     
@@ -431,12 +430,12 @@ app.get('/info/:mintAddress', async (req, res) => {
     const { mintAddress } = req.params;
     console.log(`🔍 REAL SMART CONTRACT INFO: ${mintAddress}`);
     
-    const organizerPubkey = new PublicKey(ORGANIZER_PUBLIC_KEY);
+    const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
     const connection = await createRobustConnection(RPC_URL);
     
     const mintPubkey = new PublicKey(mintAddress);
     const [ticketPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('ticket'), organizerPubkey.toBuffer(), mintPubkey.toBuffer()],
+      [Buffer.from('ticket'), solKeypair.publicKey.toBuffer(), mintPubkey.toBuffer()],
       PROGRAM_ID
     );
     
@@ -468,7 +467,6 @@ app.post('/transfer', async (req, res) => {
     const { mintAddress, fromWallet, toWallet, price } = req.body;
     console.log(`🔄 REAL SMART CONTRACT TRANSFER: ${mintAddress}`);
     
-    const organizerPubkey = new PublicKey(ORGANIZER_PUBLIC_KEY);
     const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
     const connection = await createRobustConnection(RPC_URL);
     
@@ -476,9 +474,9 @@ app.post('/transfer', async (req, res) => {
     const fromPubkey = new PublicKey(fromWallet);
     const toPubkey = new PublicKey(toWallet);
     
-    // Get ticket PDA (created by organizer)
+    // Get ticket PDA (created by server keypair)
     const [ticketPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('ticket'), organizerPubkey.toBuffer(), mintPubkey.toBuffer()],
+      [Buffer.from('ticket'), solKeypair.publicKey.toBuffer(), mintPubkey.toBuffer()],
       PROGRAM_ID
     );
     
@@ -569,52 +567,29 @@ app.get('/lifecycle/:mintAddress', async (req, res) => {
       )[0];
     };
 
-    // Try 1: organizer from env (preferred)
-    let organizerCandidate = process.env.ORGANIZER_PUBLIC_KEY;
+    // Use server keypair (consistent with minting)
     let ticketPda = null;
-
-    if (organizerCandidate) {
-      try {
-        const organizerPubkey = new PublicKey(organizerCandidate);
-        const pda = computePda(organizerPubkey);
-        const info = await connection.getAccountInfo(pda);
-        if (info) {
-          console.log('Found ticket PDA using ORGANIZER_PUBLIC_KEY');
-          ticketPda = pda;
-        } else {
-          console.log('No account at PDA computed from ORGANIZER_PUBLIC_KEY');
-        }
-      } catch (e) {
-        console.log('Invalid ORGANIZER_PUBLIC_KEY in env:', e.message);
+    try {
+      const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
+      const serverPubkey = solKeypair.publicKey;
+      const pda = computePda(serverPubkey);
+      const info = await connection.getAccountInfo(pda);
+      if (info) {
+        console.log('Found ticket PDA using server keypair');
+        ticketPda = pda;
+      } else {
+        console.log('No account at PDA computed from server keypair');
       }
+    } catch (e) {
+      console.log('Server keypair read failed:', e.message);
     }
 
-    // Try 2: fallback to server keypair if not found
+    // Fallback: search program accounts by mint field if PDA not found
     if (!ticketPda) {
-      try {
-        const solKeypair = readKeypairFromFile(KEYPAIR_PATH);
-        const serverPubkey = solKeypair.publicKey;
-        const pda = computePda(serverPubkey);
-        const info = await connection.getAccountInfo(pda);
-        if (info) {
-          console.log('Found ticket PDA using server keypair (KEYPAIR_PATH)');
-          ticketPda = pda;
-        } else {
-          console.log('No account at PDA computed from server keypair');
-        }
-      } catch (e) {
-        console.log('Server keypair read failed or not present:', e.message);
-      }
-    }
+      console.log('Searching program accounts for ticket with this mint...');
 
-    // Try 3: search program accounts by mint field (robust, always works if ticket exists)
-    if (!ticketPda) {
-      console.log('Searching program accounts for ticket with this mint (this may take a moment)...');
-
-      // Anchor discriminator = 8 bytes; mint offset = 8 + 51 = 59
-      const mintFieldOffset = 8 + 51; // 59
-      // Account size: Anchor account size = 8 + Ticket::LEN (93) = 101
-      const expectedSize = 8 + 93; // 101
+      const mintFieldOffset = 8 + 51;
+      const expectedSize = 8 + 93;
 
       const programAccounts = await connection.getProgramAccounts(PROGRAM_ID, {
         commitment: 'confirmed',
@@ -625,9 +600,8 @@ app.get('/lifecycle/:mintAddress', async (req, res) => {
       });
 
       if (programAccounts.length > 0) {
-        // If there's more than one, take the most recent (or first)
         ticketPda = programAccounts[0].pubkey;
-        console.log('Found ticket account via program accounts search:', ticketPda.toBase58());
+        console.log('Found ticket account via program search:', ticketPda.toBase58());
       } else {
         console.log('No program accounts matched the mint.');
       }

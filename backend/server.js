@@ -193,7 +193,8 @@ app.post('/buy-ticket', async (req, res) => {
       };
       
       await createTicket(ticket);
-      console.log(`   ✅ Ticket stored for ${walletAddress} in database!`);
+      console.log(`   ✅ Ticket stored in Firestore for ${walletAddress}!`);
+      console.log(`   🔥 Database: Using Firestore (not MySQL)`);
       
       res.json({
         success: true,
@@ -264,9 +265,11 @@ app.get('/my-tickets', async (req, res) => {
   }
   
   console.log(`🎫 Loading tickets for wallet: ${walletAddress}`);
+  console.log(`🔥 Using Firestore database (not MySQL)`);
+  
   const userSpecificTickets = await getUserTickets(walletAddress);
   
-  console.log(`   ✅ User has ${userSpecificTickets.length} tickets`);
+  console.log(`   ✅ Firestore returned ${userSpecificTickets.length} tickets`);
   userSpecificTickets.forEach((ticket, i) => {
     console.log(`   ${i+1}. ${ticket.name} - ${ticket.mint.slice(0,8)}... - ${ticket.isListed ? 'Listed' : 'Not Listed'}`);
   });

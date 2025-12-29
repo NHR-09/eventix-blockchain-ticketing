@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script type="module" src="auth.js"></script>
     <style>
       body {
         margin: 0;
@@ -253,12 +254,8 @@
           <input type="password" placeholder="Password" required>
           <button class="eventix-btn" type="submit">Login</button>
           <div style="margin: 18px 0; text-align:center; color: #6b4c7a;">OR</div>
-          <div id="g_id_onload"
-               data-client_id="375732261088-plc0nat6damgvd7dqrqte9i56dms45kg.apps.googleusercontent.com"
-               data-callback="handleGoogleLogin"
-               data-auto_prompt="false">
-          </div>
-          <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+          <button type="button" class="google-btn" onclick="loginWithGoogle()">🔥 Login with Firebase Google</button>
+          <button type="button" class="google-btn" onclick="loginWithTwitter()" style="margin-top: 8px;">🔥 Login with Firebase Twitter</button>
           <div class="small-text">Forgot Password? <a href="#">Reset</a></div>
         </form>
 
@@ -269,7 +266,8 @@
           <input type="password" placeholder="Confirm Password" required>
           <button class="eventix-btn" type="submit">Create Account</button>
           <div style="margin: 18px 0; text-align:center; color: #6b4c7a;">OR</div>
-          <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="signup_with" data-shape="rectangular" data-logo_alignment="left"></div>
+          <button type="button" class="google-btn" onclick="loginWithGoogle()">🔥 Sign up with Firebase Google</button>
+          <button type="button" class="google-btn" onclick="loginWithTwitter()" style="margin-top: 8px;">🔥 Sign up with Firebase Twitter</button>
           <div class="small-text">Already have an account? <a href="#" onclick="switchTab('login')">Login</a></div>
         </form>
       </div>

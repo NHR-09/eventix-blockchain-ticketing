@@ -236,6 +236,11 @@
               walletAddress: wallet
             })
           });
+          
+          console.log('🔍 Purchase request sent:', {
+            ticketType: selectedTicket.ticketType,
+            walletAddress: wallet
+          });
         }
         
         const result = await response.json();
