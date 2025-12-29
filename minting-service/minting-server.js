@@ -54,9 +54,7 @@ const PINATA_JWT = process.env.PINATA_JWT;
 const PINATA_GATEWAY = process.env.PINATA_GATEWAY;
 const KEYPAIR_PATH = process.env.KEYPAIR_PATH;
 const ORGANIZER_PUBLIC_KEY = process.env.ORGANIZER_PUBLIC_KEY || process.env.dummykey;
-// Load program ID from IDL file but use compatible structure
-const idlPath = path.join(__dirname, '../target/idl/ticket_market.json');
-const originalIDL = JSON.parse(fs.readFileSync(idlPath, 'utf8'));
+// Load program ID directly
 const PROGRAM_ID = new PublicKey('Fzqw9ehy6ypMgJkXbymvQFYsiN8GGLjLuKbM42kvXvEw');
 
 // Use Anchor 0.24.2 compatible IDL structure
@@ -107,12 +105,26 @@ console.log(`   Program ID: ${PROGRAM_ID.toBase58()}`);
 
 function readKeypairFromFile(filePath) {
   try {
-    console.log(`📁 Reading keypair from: ${filePath}`);
-    const secret = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    if (!Array.isArray(secret) || secret.length !== 64) {
-      throw new Error('Invalid keypair format');
+    // Try reading from file first (local development)
+    if (fs.existsSync(filePath)) {
+      console.log(`📁 Reading keypair from file: ${filePath}`);
+      const secret = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      if (Array.isArray(secret) && secret.length === 64) {
+        return Keypair.fromSecretKey(Uint8Array.from(secret));
+      }
     }
-    return Keypair.fromSecretKey(Uint8Array.from(secret));
+    
+    // Fallback to environment variable (production)
+    const keypairEnv = process.env.SOLANA_KEYPAIR;
+    if (keypairEnv) {
+      console.log('📁 Reading keypair from environment variable');
+      const secret = JSON.parse(keypairEnv);
+      if (Array.isArray(secret) && secret.length === 64) {
+        return Keypair.fromSecretKey(Uint8Array.from(secret));
+      }
+    }
+    
+    throw new Error('Invalid keypair format or not found');
   } catch (e) {
     throw new Error(`Failed to read keypair: ${e.message}`);
   }
